@@ -1,0 +1,88 @@
+{{- range $component := list "server" "worker" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flitz.fullname" $ }}-{{ $component }}
+  labels:
+    {{- include "flitz.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+spec:
+  replicas: {{ (index $.Values $component).replicas }}
+  selector:
+    matchLabels:
+      {{- include "flitz.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $component }}
+  template:
+    metadata:
+      labels:
+        {{- include "flitz.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $component }}
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") $ | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ $component }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          args: [{{ $component }}]
+          envFrom:
+            {{- if include "flitz.hasSecrets" $ }}
+            - secretRef:
+                name: {{ include "flitz.fullname" $ }}
+            {{- end }}
+            {{- with $.Values.existingSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          env:
+            - name: BASE_URL
+              value: {{ required "Set baseUrl to the public URL of the instance, such as https://flitz.example.com" $.Values.baseUrl | quote }}
+            {{- range $name, $value := $.Values.config }}
+            {{- if $value }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- with $.Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if eq $component "server" }}
+          ports:
+            - name: http
+              containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          {{- end }}
+          securityContext:
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml (index $.Values $component).resources | nindent 12 }}
+          {{- with $.Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $.Values.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

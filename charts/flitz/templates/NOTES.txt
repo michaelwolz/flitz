@@ -1,0 +1,29 @@
+{{- $missing := list }}
+{{- if not .Values.existingSecret }}
+{{- range list "DATABASE_URL" "REDIS_URL" "AUTH_SECRET" }}
+{{- if not (get $.Values.secrets .) }}{{ $missing = append $missing (print "secrets." .) }}{{ end }}
+{{- end }}
+{{- end }}
+{{- with $missing -}}
+flitz does not start without {{ join ", " . }}. Set them, or provide the secrets through existingSecret or extraEnv.
+
+{{ end -}}
+flitz {{ .Chart.AppVersion }} runs {{ .Values.server.replicas }} server and {{ .Values.worker.replicas }} worker replicas for {{ .Values.baseUrl }}.
+{{- if not (or .Values.ingress.enabled .Values.httpRoute.enabled) }}
+
+Neither ingress nor httpRoute is enabled. Route {{ .Values.baseUrl }} to the Service {{ include "flitz.fullname" . }} on port {{ .Values.service.port }}.
+{{- end }}
+
+Your proxy, ingress controller or gateway must terminate TLS, pass the original Host header and add
+the visitor's IP to X-Forwarded-For. config.TRUSTED_PROXIES must be the number of proxies in front of
+flitz; its default "1" fits one ingress controller or gateway.
+
+{{- if not .Values.config.ADMIN_EMAILS }}
+
+config.ADMIN_EMAILS is empty, so the first person to sign up and verify their email
+{{- if .Values.config.SIGNUP_DOMAINS }} at a domain in config.SIGNUP_DOMAINS{{ end }} becomes admin.
+Set it before the instance is reachable from the internet.
+{{- end }}
+
+Web app: {{ .Values.baseUrl }}/app
+Docs:    {{ .Values.baseUrl }}/docs

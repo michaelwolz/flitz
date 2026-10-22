@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/test-results
+**/playwright-report
+.git
+.scratch
+.superpowers
+.env*
+CLAUDE.local.md
+apps/site

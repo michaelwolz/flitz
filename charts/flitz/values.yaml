@@ -1,0 +1,120 @@
+image:
+  # Server and worker run the same image.
+  repository: ghcr.io/michaelwolz/flitz
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Secrets for pulling the image from a private registry.
+imagePullSecrets: []
+
+# The public URL of the instance, such as https://flitz.example.com (BASE_URL). Required.
+# Its host is the default for ingress.hosts and httpRoute.hostnames.
+baseUrl: ""
+
+# Settings that hold credentials. The chart stores the ones you set in a Secret.
+# Leave them empty to use existingSecret instead. Values are strings: quote numbers.
+secrets:
+  # Postgres connection URL, such as postgres://flitz:secret@postgres:5432/flitz. Required.
+  DATABASE_URL: ""
+  # Redis connection URL, such as redis://redis:6379. Required.
+  REDIS_URL: ""
+  # A random secret of at least 32 characters that signs sessions, such as the output of
+  # `openssl rand -base64 32`. Required. Keep it the same across upgrades.
+  AUTH_SECRET: ""
+  # SMTP connection URL for emails, such as smtps://user:password@smtp.example.com:465.
+  # Without it, flitz sends no emails and only logs a warning with the recipient and subject.
+  SMTP_URL: ""
+  # Turns on sign-in with Google together with config.GOOGLE_CLIENT_ID.
+  GOOGLE_CLIENT_SECRET: ""
+  # Turns on sign-in with GitHub together with config.GITHUB_CLIENT_ID.
+  GITHUB_CLIENT_SECRET: ""
+
+# The name of an existing Secret with the settings above, under keys named like them
+# (DATABASE_URL, REDIS_URL, AUTH_SECRET, ...). Its keys win over secrets.
+existingSecret: ""
+
+# Plain settings. Empty ones are left out, so flitz uses its default. Quote numbers and booleans.
+config:
+  # Comma-separated emails that may always sign up and are admin. Set before going public.
+  # See "Users and sign-up" in the self-hosting guide.
+  ADMIN_EMAILS: ""
+  # Comma-separated email domains, such as "example.com", whose people may sign up without an invitation.
+  SIGNUP_DOMAINS: ""
+  # The role of people who sign up through SIGNUP_DOMAINS: admin, member or viewer. flitz defaults to member.
+  DEFAULT_ROLE: ""
+  # The sender address for emails, such as "flitz <links@example.com>". Required with SMTP_URL.
+  SMTP_FROM: ""
+  GOOGLE_CLIENT_ID: ""
+  GITHUB_CLIENT_ID: ""
+  # Requests to short URLs per client IP per minute. flitz defaults to 600.
+  RATE_LIMIT_REDIRECTS_PER_MINUTE: ""
+  # How many reverse proxies in front of flitz add to X-Forwarded-For; flitz takes the client IP from
+  # that position, counted from the right. "1" fits one ingress controller or gateway; add one for each
+  # CDN or load balancer in front of it. Set "0" if visitors reach the Service directly.
+  TRUSTED_PROXIES: "1"
+  # Path to a country database in MaxMind DB format, mounted with extraVolumes and extraVolumeMounts.
+  # The image defaults to its bundled DB-IP Lite database.
+  GEOIP_DATABASE: ""
+
+# More environment variables for server and worker, such as a setting read from a Secret key
+# with another name:
+#   - name: DATABASE_URL
+#     valueFrom:
+#       secretKeyRef:
+#         name: postgres-app
+#         key: uri
+extraEnv: []
+
+# Volumes and mounts for server and worker, such as a GeoIP database.
+extraVolumes: []
+extraVolumeMounts: []
+
+# Answers HTTP: short URLs, QR codes, the web app, the API, MCP and the docs.
+server:
+  replicas: 1
+  resources: {}
+
+# Writes clicks from Redis to Postgres in batches. Run at least one.
+worker:
+  replicas: 1
+  resources: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  # Hosts routed to flitz. Defaults to the host of baseUrl. Add custom domains here.
+  hosts: []
+  # For example:
+  #   - secretName: flitz-tls
+  #     hosts: [flitz.example.com]
+  tls: []
+
+# A Gateway API HTTPRoute, as an alternative to the Ingress.
+httpRoute:
+  enabled: false
+  annotations: {}
+  # The Gateways to attach to, for example:
+  #   - name: public
+  #     namespace: gateway
+  parentRefs: []
+  # Hostnames routed to flitz. Defaults to the host of baseUrl. Add custom domains here.
+  hostnames: []
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]

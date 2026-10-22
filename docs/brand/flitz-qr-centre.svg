@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-label="Flitz">
+<title>Flitz</title>
+<rect width="72" height="72" rx="20" fill="#FFFFFF"/>
+<g transform="translate(4 4)">
+<rect width="64" height="64" rx="16" fill="#FF6B5B"/>
+<g transform="translate(2 -1)" fill="none" stroke="#2E1065" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke-width="10" d="M29.3 54 35.7 24C37.1 17.4 43.6 12 50.3 12M26 32H44"/>
+  <path stroke-width="6" d="M11 23h10M8 41h11"/>
+</g>
+</g>
+</svg>

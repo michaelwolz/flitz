@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in flitz doesn't work as it should.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For security problems, don't open an issue: follow the [security policy](https://github.com/michaelwolz/flitz/security/policy).
+  - type: input
+    id: version
+    attributes:
+      label: flitz version
+      description: The image tag or chart version, `info.version` in `/api/openapi.json` of your instance, or the commit if you built it yourself.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How do you run flitz?
+      options:
+        - Docker Compose
+        - Helm chart
+        - Another Docker setup
+        - From source (development)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, step by step, starting from a running instance.
+      placeholder: |
+        1. Create a link with ...
+        2. Open its short URL from ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead, with error messages or the relevant server log lines. Remove secrets, `AUTH_SECRET`, API keys and email addresses of other people first.
+    validations:
+      required: true

@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAge: 10080
+allowBuilds:
+  cpu-features: false
+  esbuild: false
+  lefthook: true
+  protobufjs: false
+  ssh2: false

@@ -1,0 +1,6 @@
+{
+  "cooldown": "7d",
+  "workspaces": true,
+  "root": true,
+  "reject": ["@types/node"]
+}

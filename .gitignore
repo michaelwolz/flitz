@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Playwright
+test-results/
+playwright-report/
+
+# Env
+.env
+.env.*
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Agent/browser-session scratch artifacts
+.playwright-mcp/
+.scratch/
+.superpowers/
+
+# Editor/OS
+.DS_Store
+.idea/
+
+# Local only
+CLAUDE.local.md

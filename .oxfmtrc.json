@@ -1,0 +1,6 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 140,
+  "embeddedLanguageFormatting": "off",
+  "ignorePatterns": ["CHANGELOG.md", "packages/db/drizzle/**", "charts/flitz/templates/**"]
+}

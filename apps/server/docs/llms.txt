@@ -1,0 +1,16 @@
+# flitz
+
+> flitz is a self-hostable link shortener with redirect rules by device and country and click analytics that never store IP addresses. This instance runs at {{BASE_URL}}.
+
+Every operation of the REST API at {{BASE_URL}}/api is also an MCP tool at {{BASE_URL}}/api/mcp. Requests need an API key, sent in the Authorization header as `Bearer flitz_...`, or an MCP connection made with OAuth. Errors are JSON objects with a `code` and a `message`.
+
+## Docs
+
+- [Getting started]({{BASE_URL}}/docs/getting-started.md): get an API key, create a link and follow its short URL
+- [Concepts]({{BASE_URL}}/docs/concepts.md): users and roles, links, redirect rules, presets, domains, scopes and the words flitz uses for them
+- [Connect via MCP]({{BASE_URL}}/docs/mcp.md): connect Claude, ChatGPT and other MCP clients with OAuth or with an API key
+- [Self-hosting]({{BASE_URL}}/docs/self-hosting.md): run your own instance with docker compose and the settings it reads
+
+## API
+
+- [OpenAPI spec]({{BASE_URL}}/api/openapi.json): every REST operation with its input, output and scope

@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          install: false
+      - run: pnpm install --frozen-lockfile --filter flitz
+      - name: Check that every new commit follows Conventional Commits
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            pnpm exec commitlint --from "$BASE" --to HEAD
+          else
+            pnpm exec commitlint --from "$(git rev-list --max-parents=0 HEAD)" --to HEAD
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          install: false
+      - run: pnpm install --frozen-lockfile --filter flitz
+      - run: pnpm lint
+      - run: pnpm format:check
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - &setup
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          require-lockfile: true
+          cache: true
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - *setup
+      - run: pnpm --filter @flitzlink/site build
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+        with:
+          version: v4.3.1
+      - run: helm lint --strict charts/flitz --set baseUrl=https://flitz.example.com
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: flitz
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Import the server and worker modules on a read-only filesystem
+        run: >-
+          docker run --rm --read-only --entrypoint node flitz --input-type=module
+          -e 'await import("/app/apps/server/src/app.ts"); await import("/app/apps/server/src/clicks.ts")'
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - *setup
+      - run: pnpm --filter @flitzlink/web exec playwright install --with-deps --only-shell chromium
+      - run: pnpm e2e

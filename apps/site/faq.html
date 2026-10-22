@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- head -->
+    <title>Frequently asked questions · flitz</title>
+    <meta
+      name="description"
+      content="How flitz handles redirect rules, clicks, privacy, AI agents and self-hosting, the license and where your data lives."
+    />
+    <link rel="canonical" href="%SITE_URL%/faq.html" />
+    <meta property="og:url" content="%SITE_URL%/faq.html" />
+    <meta property="og:title" content="Frequently asked questions · flitz" />
+    <meta
+      property="og:description"
+      content="How flitz handles redirect rules, clicks, privacy, AI agents and self-hosting, the license and where your data lives."
+    />
+  </head>
+  <body>
+    <!-- header -->
+    <main id="main" class="container">
+      <div class="page">
+        <h1>Frequently asked questions</h1>
+        <p class="lead">How flitz works, what it stores and how to run it yourself.</p>
+
+        <section class="faq-group" aria-labelledby="faq-basics">
+          <h2 id="faq-basics">The basics</h2>
+          <h3>What is flitz?</h3>
+          <p>
+            flitz is a link shortener for marketing teams and app makers who run it on their own servers. It turns long URLs into short
+            URLs, sends each visitor to the right target for their device or country, and counts clicks without storing IP addresses. Links,
+            domains and stats work in the web app, through the REST API and as MCP tools for AI agents; users and roles are managed in the
+            web app.
+          </p>
+          <h3>Is flitz open source?</h3>
+          <p>
+            Yes, under the <a href="%LICENSE_URL%">Apache-2.0</a> license: you can use, change and redistribute flitz, also commercially, as
+            long as you keep the license and copyright notices.
+          </p>
+          <h3>Is there a hosted version?</h3>
+          <p>No. flitz is self-hosted only, and no hosted version is planned: you run it on your own servers.</p>
+          <h3>What do I need to run flitz myself?</h3>
+          <p>
+            One Docker image next to Postgres and Redis. Start it with docker compose from a checkout of the repository, or on Kubernetes
+            with the Helm chart. The image runs as a server, which answers short URLs, the web app, the API and MCP, and as a worker, which
+            writes clicks to Postgres. flitz doesn't handle TLS, so put a reverse proxy or ingress in front of it. The
+            <a href="%DOCS_URL%/self-hosting.md">self-hosting guide</a> lists every setting.
+          </p>
+          <h3>Which AI agents can use flitz?</h3>
+          <p>
+            MCP clients that support OAuth with Client ID Metadata Documents connect with a sign-in, and you pick the scopes they get, never
+            more than your role allows. Other clients, headless agents, scripts and CI send an API key from an admin instead, if they can
+            set a request header. Every API operation is an MCP tool with the same scope, no tool deletes links, and you can disconnect an
+            app at any time. See
+            <a href="%DOCS_URL%/mcp.md">Connect via MCP</a>.
+          </p>
+        </section>
+
+        <section class="faq-group" aria-labelledby="faq-links">
+          <h2 id="faq-links">Links and redirect rules</h2>
+          <h3>How do redirect rules work?</h3>
+          <p>
+            Each link has an ordered list of redirect rules. A rule has one or more conditions, such as the device (iOS, Android, mobile or
+            desktop) or the country, and its own target. The first rule whose conditions all match wins; if none matches, the visitor goes
+            to the link's default target. Presets fill in the usual rules for you: App Store, mobile vs desktop and country split. They save
+            nothing themselves, and the rules they create stay editable.
+          </p>
+          <h3>Why are redirects temporary?</h3>
+          <p>
+            Browsers cache permanent 301 redirects, so a changed target would not reach people who clicked before, and their repeat clicks
+            would never be counted. flitz never answers with a permanent redirect: a temporary 302 makes every change take effect at once
+            and lets every click reach flitz. Query parameters on the short URL, such as UTM tags, are added to the target unless the target
+            already has a parameter of the same name; the target's own parameters win.
+          </p>
+          <h3>What happens on an iPad?</h3>
+          <p>
+            An iPad in its default desktop mode looks the same as Safari on a Mac. When a link's redirect rules send iOS and desktop to
+            different targets, flitz answers these requests with a small page instead of a 302. The page sends touch devices to the iOS
+            target and everyone else to the desktop target.
+          </p>
+          <h3>Can I delete a link?</h3>
+          <p>
+            No, you deactivate it. A deactivated link stops redirecting but keeps its slug and click history, and you can reactivate it
+            later. Short URLs end up on flyers and in QR codes, and a deleted slug could later lead somewhere else. Clicks are removed by
+            the retention period.
+          </p>
+          <h3>Can I use my own domain?</h3>
+          <p>
+            Yes. An admin adds it in the web app and points its DNS at flitz; your reverse proxy decides which hosts reach flitz at all, and
+            flitz doesn't check who owns the domain. You can choose your own slugs, such as
+            <span class="mono" translate="no">links.example.com/fair</span>, and set a fallback URL for slugs that don't exist.
+          </p>
+        </section>
+
+        <section class="faq-group" aria-labelledby="faq-privacy">
+          <h2 id="faq-privacy">Privacy and clicks</h2>
+          <h3>Does flitz set cookies or store IP addresses?</h3>
+          <p>
+            Not for short URLs and clicks. Opening a short URL sets no cookie and stores nothing on the visitor's device. The visitor's IP
+            address is used in memory only, to look up the country, to compute the visitor hash and for rate limits, and is never stored.
+          </p>
+          <p>
+            The web app is different: when you sign in, it sets a session cookie and stores your IP address and browser with your session,
+            for account security. Both are deleted 30 days after the session ends.
+          </p>
+          <h3>How does flitz count unique visitors?</h3>
+          <p>
+            With a visitor hash: a daily hash of the visitor's IP address and user agent, made with a salt that changes every day and is
+            then deleted. Hashes from different days can't be linked, so flitz counts unique visitors per day or hour, and there is no
+            unique visitor total over several days.
+          </p>
+          <h3>Where does the country come from?</h3>
+          <p>
+            From the visitor's IP address, looked up in the DB-IP Lite database (CC BY 4.0) that ships with flitz. You can use a MaxMind
+            GeoLite2 database instead. If the country is unknown, country conditions don't match.
+          </p>
+          <h3>What are bot clicks?</h3>
+          <p>
+            Clicks whose user agent shows a crawler, a link preview or an email scanner. flitz records them but leaves them out of stats by
+            default. A bot that sends the user agent of a normal browser counts as a normal click.
+          </p>
+          <h3>How long are clicks kept?</h3>
+          <p>
+            13 months by default. An admin can change the retention period on the Settings page, from 1 to 120 months. Older clicks are
+            deleted for good.
+          </p>
+        </section>
+
+        <section class="faq-group" aria-labelledby="faq-data">
+          <h2 id="faq-data">Your data and security</h2>
+          <h3>Where does my data live?</h3>
+          <p>
+            On your own servers. Links, accounts and clicks are stored in your Postgres database, and new clicks wait in Redis until the
+            worker writes them. The country lookup uses the database bundled with flitz, so it needs no outside service.
+          </p>
+          <h3>Can I import my links, and can I leave again?</h3>
+          <p>
+            flitz has no importer yet; to bring many links at once, create them with a script against the REST API. To leave, list your
+            links through the API and export your clicks as CSV, or take them straight from your Postgres database. Short URLs on your own
+            domain go wherever you point that domain next.
+          </p>
+          <h3>Who can sign up on my instance?</h3>
+          <p>
+            People sign up in the web app with a password, a magic link, Google or GitHub, and every user has to verify their email. On an
+            empty instance the first person to sign up becomes admin, unless you list admins in
+            <span class="mono" translate="no">ADMIN_EMAILS</span>; set that before the instance is reachable from the internet. If you allow
+            email domains in <span class="mono" translate="no">SIGNUP_DOMAINS</span>, only someone at one of them can be that first admin.
+            After that, only people with an invitation from an admin, an email at a domain you allow in
+            <span class="mono" translate="no">SIGNUP_DOMAINS</span> or an address in
+            <span class="mono" translate="no">ADMIN_EMAILS</span> can sign up.
+          </p>
+          <h3>How do I report a security issue?</h3>
+          <p>
+            Privately, as described in the <a href="%REPO_URL%/blob/main/SECURITY.md">security policy on GitHub</a>, not in a public issue.
+          </p>
+        </section>
+      </div>
+    </main>
+    <!-- footer -->
+  </body>
+</html>

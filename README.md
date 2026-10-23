@@ -73,7 +73,7 @@ Before going public, follow the [self-hosting guide](apps/server/docs/self-hosti
 | `apps/site`    | The website, published on GitHub Pages                 |
 | `packages/db`  | Database schema and migrations (Drizzle)               |
 | `charts/flitz` | Helm chart                                             |
-| `docs`         | Brand assets, design tokens and agent notes            |
+| `docs`         | Brand assets and design tokens                         |
 
 The words flitz uses (link, instance, redirect rule, …) are defined in [GLOSSARY.md](GLOSSARY.md).
 

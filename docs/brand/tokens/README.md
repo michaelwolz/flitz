@@ -1,6 +1,6 @@
 # flitz design tokens
 
-Exported from the flitz Design System. `tokens.json` is the source; `tokens.css` is generated from it. The Tailwind v4 theme of the web app, with the shadcn/ui variables, flitz additions, radius, elevation, motion and the type scale, is `apps/web/src/globals.css`.
+`tokens.json` is the source; `tokens.css` is generated from it. The Tailwind v4 theme of the web app, with the shadcn/ui variables, flitz additions, radius, elevation, motion and the type scale, is `apps/web/src/globals.css`.
 
 | File          | Use                                                                       |
 | ------------- | ------------------------------------------------------------------------- |
@@ -15,7 +15,7 @@ Exported from the flitz Design System. `tokens.json` is the source; `tokens.css`
 - Colours follow shadcn names (`bg-primary`, `text-muted-foreground`, …). The flitz additions are `destructive-foreground`, `destructive-soft`, `success`, `success-soft`, `warning`, `warning-soft`, `brand-coral` and `brand-violet`.
 - `shadow-xs`, `shadow-sm` and `shadow-lg` read the theme's `elevation-*` values. `rounded-*` derives from `--radius` (0.75rem); actions use `rounded-full`.
 
-The component edits to make after `shadcn add` (pill buttons, the solid focus outline, the dark destructive style) and the usage rules are in the Design System's brand book.
+After `shadcn add`, re-apply the flitz edits to the generated component: pill buttons, the solid focus outline, `bg-card` fields and the dark destructive style.
 
 ## Using `tokens.css`
 

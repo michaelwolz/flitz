@@ -16,14 +16,12 @@ playwright-report/
 *.log
 pnpm-debug.log*
 
-# Agent/browser-session scratch artifacts
-.playwright-mcp/
-.scratch/
-.superpowers/
-
 # Editor/OS
 .DS_Store
 .idea/
 
 # Local only
+.playwright-mcp/
+.scratch/
+.superpowers/
 CLAUDE.local.md

@@ -2,3 +2,5 @@ flitz
 Copyright 2026 Michael Wolz
 
 The Docker image bundles the DB-IP Lite country database (https://db-ip.com), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+
+The web app bundles the fonts Bricolage Grotesque, Figtree and DM Mono, licensed under the SIL Open Font License 1.1 (https://openfontlicense.org).

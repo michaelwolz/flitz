@@ -139,7 +139,7 @@ Besides caches and rate-limit counters, Redis holds the clicks that no worker ha
 
 flitz serves plain HTTP and does not handle TLS. Put a reverse proxy or ingress in front of it that:
 
-- terminates TLS for the instance domain and every custom domain,
+- terminates TLS for the instance domain and every custom domain, and sets HSTS if you want it, since flitz adds no such header,
 - passes the original `Host` header, because flitz tells the instance domain and custom domains apart by host and answers `404` to any other host, except at `/healthz` and `/api/domains/known`,
 - adds the address it received the request from to `X-Forwarded-For`, as reverse proxies, ingress controllers and load balancers usually do.
 

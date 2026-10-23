@@ -30,7 +30,7 @@ pnpm e2e                               # builds the web app and runs Playwright
 
 `pnpm install` also sets up a pre-commit hook that formats the staged files with oxfmt and lints them with oxlint. CI runs these (the e2e run builds the web app), builds the Docker image and lints the Helm chart. To try a change end to end, run `docker compose up --build`.
 
-To update dependencies, run `pnpm dlx npm-check-updates -u` and then `pnpm install`. `.ncurc.json` gives it a 7-day cooldown, so it only picks versions published at least 7 days ago, and keeps `@types/node` on the Node major the image runs. pnpm rejects every package younger than 7 days, transitive ones included (`minimumReleaseAge` in `pnpm-workspace.yaml`): if a range needs a younger version, lower it to the newest one old enough, and if pnpm rejects the lockfile, re-resolve it with `pnpm clean --lockfile` and `pnpm install`.
+To update dependencies, run `pnpm dlx npm-check-updates -u` and then `pnpm install`. `.ncurc.json` gives it a 7-day cooldown, so it only picks versions published at least 7 days ago, and keeps `@types/node` on the Node major the image runs and `ua-parser-js` on v1 (v2 is AGPL). pnpm rejects every package younger than 7 days, transitive ones included (`minimumReleaseAge` in `pnpm-workspace.yaml`): if a range needs a younger version, lower it to the newest one old enough, and if pnpm rejects the lockfile, re-resolve it with `pnpm clean --lockfile` and `pnpm install`.
 
 Read [AGENTS.md](AGENTS.md) before you change code: its rules apply to people and agents alike. The words flitz uses are defined in [GLOSSARY.md](GLOSSARY.md).
 

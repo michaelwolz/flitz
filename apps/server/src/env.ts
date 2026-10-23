@@ -10,6 +10,12 @@ export function required(env: NodeJS.ProcessEnv, name: string) {
   return value;
 }
 
+export function optionalWebUrl(env: NodeJS.ProcessEnv, name: string) {
+  const value = env[name] || undefined;
+  if (value && !/^https?:$/.test(URL.parse(value)?.protocol ?? "")) throw new Error(`${name} must be an http or https URL`);
+  return value;
+}
+
 export function lowercaseList(env: NodeJS.ProcessEnv, name: string) {
   return (env[name] ?? "")
     .split(",")

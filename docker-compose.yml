@@ -15,6 +15,8 @@ x-environment: &environment
   GITHUB_CLIENT_SECRET:
   RATE_LIMIT_REDIRECTS_PER_MINUTE:
   GEOIP_DATABASE: ${GEOIP_DATABASE:-/app/geoip/dbip-country-lite.mmdb}
+  IMPRINT_URL:
+  PRIVACY_POLICY_URL:
 
 services:
   server:

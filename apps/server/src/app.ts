@@ -12,7 +12,7 @@ import { connectedAppRoutes } from "./connected-apps.ts";
 import { consentRoutes } from "./consent.ts";
 import { docs } from "./docs.ts";
 import { domainRoutes } from "./domains.ts";
-import { connectStores, lowercaseList, required, version, wholeNumber } from "./env.ts";
+import { connectStores, lowercaseList, optionalWebUrl, required, version, wholeNumber } from "./env.ts";
 import { createLinkCache, type DomainEnv } from "./link-cache.ts";
 import { linkDeletionRoutes } from "./link-deletion.ts";
 import { linkRoutes, reservedSlugs, slugPattern } from "./links.ts";
@@ -40,6 +40,7 @@ export async function createApp(
   assertAuthSecret(env);
   const baseUrl = required(env, "BASE_URL");
   const instanceHostname = new URL(baseUrl).hostname;
+  const legal = { imprint: optionalWebUrl(env, "IMPRINT_URL"), privacyPolicy: optionalWebUrl(env, "PRIVACY_POLICY_URL") };
   const { db, redis } = await connectStores(env);
   const linkCache = await createLinkCache(db, redis, instanceHostname);
   const limits = rateLimits(env, redis);
@@ -81,7 +82,7 @@ export async function createApp(
     if (/^\/api(\/|$)/.test(c.req.path)) return handleApiError(error, c);
     if (error instanceof HTTPException) return error.getResponse();
     console.error(error);
-    return c.html(errorPage(), 500);
+    return c.html(errorPage(legal), 500);
   });
 
   app.get("/healthz", (c) => c.text("ok"));
@@ -143,7 +144,7 @@ export async function createApp(
       if (link) return redirect(c, link, facts);
     }
     if (domain?.fallbackUrl && !link) return c.redirect(domain.fallbackUrl, 302);
-    return c.html(notFoundPage(`${new URL(c.req.url).host}/${c.req.param("slug")}`), 404);
+    return c.html(notFoundPage(`${new URL(c.req.url).host}/${c.req.param("slug")}`, legal), 404);
   });
 
   return { app, close: () => Promise.all([linkCache.close(), redis.close(), db.$client.end()]) };

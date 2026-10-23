@@ -43,6 +43,16 @@ test("the root of the Instance Domain redirects to the sign-up page", async () =
 test("an unknown Slug answers 404", async () => {
   const response = await app.request("/nope234");
   expect(response.status).toBe(404);
+  expect(await response.text()).not.toContain("Imprint");
+});
+
+test("the 404 page links to IMPRINT_URL and PRIVACY_POLICY_URL, which must be http or https URLs", async () => {
+  await expect(createApp({ ...env, IMPRINT_URL: "javascript:alert(1)" })).rejects.toThrow("IMPRINT_URL must be an http or https URL");
+  const legal = await createApp({ ...env, IMPRINT_URL: "https://example.com/imprint", PRIVACY_POLICY_URL: "https://example.com/privacy" });
+  const page = await (await legal.app.request("/nope234")).text();
+  await legal.close();
+  expect(page).toContain('<a href="https://example.com/imprint">Imprint</a>');
+  expect(page).toContain('<a href="https://example.com/privacy">Privacy policy</a>');
 });
 
 test("/healthz answers 200 for probes although healthz is a reserved Slug", async () => {

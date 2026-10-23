@@ -56,6 +56,9 @@ config:
   # Path to a country database in MaxMind DB format, mounted with extraVolumes and extraVolumeMounts.
   # The image defaults to its bundled DB-IP Lite database.
   GEOIP_DATABASE: ""
+  # http(s) URLs of your imprint and privacy policy, linked in the footer of the 404 and error pages.
+  IMPRINT_URL: ""
+  PRIVACY_POLICY_URL: ""
 
 # More environment variables for server and worker, such as a setting read from a Secret key
 # with another name:

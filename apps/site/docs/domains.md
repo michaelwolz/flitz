@@ -25,7 +25,7 @@ When you create a link, pick the custom domain as its **Domain**. A link's domai
 
 ## Fallback URL
 
-A custom domain can send visitors to a **Fallback URL**, such as your website, when its slug is unknown or the link is deactivated. Without one, they see a not-found page.
+A custom domain can send visitors to a **Fallback URL**, such as your website, when its slug is unknown or the link is deactivated. Without one, they see a not-found page. Whoever runs the instance can link their imprint and privacy policy in its footer, see [Settings](self-hosting.html#settings).
 
 <figure>
   <img src="screenshots/domains-list.png" alt="The Domains page with the custom domain links.example.com, its fallback URL and the instance domain." width="1000" height="570" />

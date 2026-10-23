@@ -302,7 +302,7 @@ function ClicksChart({ stats }: { stats: Stats }) {
       </div>
       <figcaption className="text-small text-muted-foreground">{t("stats.uniqueVisitorsHint")}</figcaption>
       <details className="text-small">
-        <summary className="cursor-pointer font-medium">{t("stats.showTable")}</summary>
+        <summary className="font-medium">{t("stats.showTable")}</summary>
         <Table className="mt-3">
           <TableHeader>
             <TableRow className="hover:bg-transparent">

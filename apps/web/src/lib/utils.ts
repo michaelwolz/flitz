@@ -35,7 +35,8 @@ export function countryName(code: string) {
   }
 }
 
-export const textLink = "font-medium text-foreground underline decoration-primary decoration-2 underline-offset-3";
+export const textLink =
+  "font-medium text-foreground underline decoration-primary decoration-2 underline-offset-3 transition-colors hover:decoration-foreground";
 export const titleLink = "block truncate font-medium hover:underline hover:decoration-primary hover:decoration-2 hover:underline-offset-3";
 export const avatar =
   "grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-caption font-semibold text-secondary-foreground";

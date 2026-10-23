@@ -59,7 +59,7 @@ function AuthLayout({ title, lead, children }: { title: string; lead: string; ch
         </ul>
         <p className="mt-auto text-small font-medium">
           {t("auth.openSource")}{" "}
-          <a href="https://github.com/michaelwolz/flitz" className="underline underline-offset-3">
+          <a href="https://github.com/michaelwolz/flitz" className="underline underline-offset-3 hover:decoration-2">
             {t("auth.sourceCode")}
           </a>
         </p>

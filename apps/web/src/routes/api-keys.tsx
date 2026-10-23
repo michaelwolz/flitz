@@ -109,7 +109,10 @@ export function ApiKeys() {
             <fieldset className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3">
               <legend className="mb-3 text-label">{t("apiKeys.scopes")}</legend>
               {scopes.map((scope) => (
-                <label key={scope} className="flex cursor-pointer items-start gap-2.5 rounded-lg border p-3">
+                <label
+                  key={scope}
+                  className="flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 transition-colors hover:bg-accent"
+                >
                   <input
                     type="checkbox"
                     name="scope"

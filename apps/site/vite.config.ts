@@ -19,8 +19,10 @@ export default defineConfig({
       name: "partials",
       transformIndexHtml: {
         order: "pre",
-        handler: (html) =>
-          html.replace(/<!-- (head|header|footer) -->/g, (_, name) => readFileSync(file(`./partials/${name}.html`), "utf8")),
+        handler: (html, { server }) => {
+          const page = html.replace(/<!-- (head|header|footer) -->/g, (_, name) => readFileSync(file(`./partials/${name}.html`), "utf8"));
+          return server ? page.replaceAll('"../../docs/', `"/@fs${file("../../docs/")}`) : page;
+        },
       },
     },
   ],

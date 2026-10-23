@@ -1,6 +1,6 @@
-# Getting started
+# API quick start
 
-In these docs, `{{BASE_URL}}` is the address of your flitz instance. Its REST API lives under `{{BASE_URL}}/api` and is described by the OpenAPI spec at `{{BASE_URL}}/api/openapi.json`. Every operation in it is also an MCP tool, see [Connect via MCP](mcp.md).
+In these docs, `{{BASE_URL}}` is the address of your flitz instance. Its REST API lives under `{{BASE_URL}}/api` and is described by the OpenAPI spec at `{{BASE_URL}}/api/openapi.json`. Every operation in it is also an MCP tool, see [MCP reference](mcp.md).
 
 ## 1. Sign up and create an API key
 

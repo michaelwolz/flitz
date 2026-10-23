@@ -111,7 +111,7 @@ Unique visitors are counted per day or hour only. The visitor hash changes every
 
 ## AI access
 
-**MCP tool**: an operation agents can call through the Model Context Protocol. Every API operation has exactly one, named after its `operationId`. See [Connect via MCP](mcp.md).
+**MCP tool**: an operation agents can call through the Model Context Protocol. Every API operation has exactly one, named after its `operationId`. See [MCP reference](mcp.md).
 
 ## Terms to avoid
 

@@ -1,4 +1,4 @@
-# Connect via MCP
+# MCP reference
 
 Your flitz instance (`{{BASE_URL}}`) is an MCP server at:
 
@@ -31,7 +31,7 @@ An app connected with an API key is not listed there; revoke the API key instead
 
 Use this for headless agents, scripts and CI, where nobody can sign in in a browser.
 
-An admin creates an API key with the scopes the agent needs (see [Getting started](getting-started.md)). Send it in the Authorization header of every request:
+An admin creates an API key with the scopes the agent needs (see [API quick start](getting-started.md)). Send it in the Authorization header of every request:
 
 ```
 authorization: Bearer flitz_...

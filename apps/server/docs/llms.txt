@@ -6,9 +6,9 @@ Every operation of the REST API at {{BASE_URL}}/api is also an MCP tool at {{BAS
 
 ## Docs
 
-- [Getting started]({{BASE_URL}}/docs/getting-started.md): get an API key, create a link and follow its short URL
+- [API quick start]({{BASE_URL}}/docs/getting-started.md): get an API key, create a link and follow its short URL
 - [Concepts]({{BASE_URL}}/docs/concepts.md): users and roles, links, redirect rules, presets, domains, scopes and the words flitz uses for them
-- [Connect via MCP]({{BASE_URL}}/docs/mcp.md): connect Claude, ChatGPT and other MCP clients with OAuth or with an API key
+- [MCP reference]({{BASE_URL}}/docs/mcp.md): connect Claude, ChatGPT and other MCP clients with OAuth or with an API key
 - [Self-hosting]({{BASE_URL}}/docs/self-hosting.md): run your own instance with docker compose and the settings it reads
 
 ## API

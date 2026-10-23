@@ -38,6 +38,13 @@
     };
     apply();
     document.addEventListener("DOMContentLoaded", apply);
+    addEventListener("pageshow", (event) => {
+      if (!event.persisted) return;
+      try {
+        chosen = localStorage.getItem("theme");
+      } catch {}
+      apply();
+    });
     media.addEventListener("change", apply);
     document.addEventListener("click", (event) => {
       if (!event.target.closest(".theme-toggle")) return;

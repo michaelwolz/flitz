@@ -122,8 +122,9 @@ function render(page: DocsPage): Rendered {
   });
   const markdown = readFileSync(page.source, "utf8").replaceAll("{{BASE_URL}}/docs/", "").replaceAll("{{BASE_URL}}", exampleUrl);
   rendered.html = (marked.parse(markdown) as string)
-    .replaceAll("<table>", '<div class="table-wrap"><table>')
-    .replaceAll("</table>", "</table></div>");
+    .replaceAll("<table>", '<div class="table-wrap" tabindex="0"><table>')
+    .replaceAll("</table>", "</table></div>")
+    .replaceAll("<pre>", '<pre tabindex="0">');
   if (!rendered.title) throw new Error(`${page.source}: no H1`);
   if (rendered.html.includes("{{")) throw new Error(`${page.source}: {{ left after rendering`);
   return rendered;

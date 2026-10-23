@@ -1,6 +1,6 @@
 # Getting started
 
-flitz turns long URLs into short URLs you can print, share and change later. This guide takes you from your account to your first short URL.
+flitz gives every target a short URL you can print, share and point somewhere else later. This guide takes you from your account to your first short URL.
 
 ## Create your account
 
@@ -11,7 +11,7 @@ Open the web app of your flitz instance: `/app` on its address, such as `https:/
   <figcaption>Create an account in the web app.</figcaption>
 </figure>
 
-flitz sends you an email with a link: open it to verify your address, and you're signed in. On an empty instance, the first person to sign up becomes admin. After that, people sign up when an admin invited them or when the instance allows their email domain, see [Users and sign-up](self-hosting.html#users-and-sign-up).
+flitz sends you an email with a link: open it to verify your address, and you're signed in. On an empty instance, the first person to sign up becomes admin, unless whoever runs it listed admin emails. After that, people sign up when an admin invited them or when the instance allows their email domain, see [Users and sign-up](self-hosting.html#users-and-sign-up).
 
 ## Create your first link
 

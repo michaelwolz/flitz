@@ -19,6 +19,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, type ClickBreakdown, type ClickTimeSeries, type Link, type OrphanClicks } from "@/lib/api";
 import { cn, countryName, displayUrl, linkName, titleLink } from "@/lib/utils";
@@ -35,6 +36,8 @@ const presets = [
   [365, "months12"],
 ] as const;
 const topValues = 5;
+const allValues = 100;
+const topLinks = 10;
 
 function statsQuery(request: Request, linkId?: string) {
   const search = new URL(request.url).searchParams;
@@ -54,7 +57,7 @@ function withParams(query: URLSearchParams, params: Record<string, string>) {
 }
 
 async function loadStats(query: URLSearchParams, signal: AbortSignal, by: readonly string[] = dimensions) {
-  const breakdownQuery = withParams(query, { limit: "10" });
+  const breakdownQuery = withParams(query, { limit: String(allValues) });
   for (const name of by) breakdownQuery.append("by", name);
   const [timeSeries, botClicks, { breakdowns }] = await Promise.all([
     api<ClickTimeSeries>(`/stats/time-series?${query}`, undefined, "GET", signal),
@@ -346,8 +349,7 @@ function Breakdowns({ stats }: { stats: Stats }) {
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-6">
       {dimensions.map((by) => {
-        const values = (stats.breakdowns[by] ?? []).slice(0, topValues);
-        const other = total - values.reduce((sum, row) => sum + row.clicks, 0);
+        const values = stats.breakdowns[by] ?? [];
         const row = (label: string, clicks: number) => (
           <>
             <span className="truncate">{label}</span>
@@ -360,37 +362,54 @@ function Breakdowns({ stats }: { stats: Stats }) {
           </>
         );
         const rowClass = "grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 rounded-md px-2 py-1.5 text-left";
+        const list = (shown: typeof values, inSheet = false) => {
+          const other = total - shown.reduce((sum, row) => sum + row.clicks, 0);
+          return (
+            <ul className="flex flex-col gap-1">
+              {shown.map(({ value, clicks }) => {
+                const filter = value ?? "";
+                const active = params.get(by) === filter;
+                const button = (
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => update({ [by]: active ? null : filter })}
+                    className={cn(
+                      rowClass,
+                      "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent",
+                    )}
+                  >
+                    {row(valueLabel(by, value), clicks)}
+                  </button>
+                );
+                return <li key={filter}>{inSheet ? <SheetClose asChild>{button}</SheetClose> : button}</li>;
+              })}
+              {other > 0 && <li className={rowClass}>{row(t("stats.other"), other)}</li>}
+            </ul>
+          );
+        };
         return (
           <Card key={by} aria-labelledby={`breakdown-${by}`} className="gap-4">
             <CardHeader>
               <CardTitle id={`breakdown-${by}`}>{t(`stats.breakdowns.${by}`)}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              {values.length ? (
-                <ul className="flex flex-col gap-1">
-                  {values.map(({ value, clicks }) => {
-                    const filter = value ?? "";
-                    const active = params.get(by) === filter;
-                    return (
-                      <li key={filter}>
-                        <button
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => update({ [by]: active ? null : filter })}
-                          className={cn(
-                            rowClass,
-                            "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent",
-                          )}
-                        >
-                          {row(valueLabel(by, value), clicks)}
-                        </button>
-                      </li>
-                    );
-                  })}
-                  {other > 0 && <li className={rowClass}>{row(t("stats.other"), other)}</li>}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">{t("stats.noClicks")}</p>
+              {values.length ? list(values.slice(0, topValues)) : <p className="text-muted-foreground">{t("stats.noClicks")}</p>}
+              {values.length > topValues && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="link" size="sm" aria-describedby={`breakdown-${by}`} className="self-start px-2">
+                      {t("stats.showAll")}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader className="pr-12">
+                      <SheetTitle>{t(`stats.breakdowns.${by}`)}</SheetTitle>
+                      <SheetDescription>{t("stats.allValues", { max: allValues })}</SheetDescription>
+                    </SheetHeader>
+                    <div className="overflow-y-auto px-2 pb-4">{list(values, true)}</div>
+                  </SheetContent>
+                </Sheet>
               )}
               {by === "country" && (
                 <a
@@ -493,7 +512,7 @@ export function InstanceStats() {
   const { t } = useTranslation();
   const { stats, orphans } = useLoaderData<typeof instanceStatsLoader>();
   const total = stats.timeSeries.clicks;
-  const topLinks = stats.breakdowns.link ?? [];
+  const links = (stats.breakdowns.link ?? []).slice(0, topLinks);
 
   return (
     <div className="flex flex-col gap-6">
@@ -504,7 +523,7 @@ export function InstanceStats() {
           <h2 id="top-links" className="font-heading text-heading">
             {t("stats.topLinks")}
           </h2>
-          {topLinks.length ? (
+          {links.length ? (
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -519,7 +538,7 @@ export function InstanceStats() {
                 </TableRow>
               </TableHeader>
               <TableBody className="tabular-nums">
-                {topLinks.map(({ value, clicks, shortUrl, title }) => (
+                {links.map(({ value, clicks, shortUrl, title }) => (
                   <TableRow key={value}>
                     <TableCell className="max-w-[280px]">
                       <RouterLink to={`/links/${value}/stats`} className={titleLink}>

@@ -205,6 +205,8 @@
     "direct": "None (direct or QR code)",
     "none": "None",
     "other": "Other",
+    "showAll": "Show all",
+    "allValues": "Most clicks first, up to {{max}} values. Select one to filter all stats by it.",
     "noClicks": "No clicks in this time range.",
     "geolocation": "IP geolocation by DB-IP",
     "qrTitle": "QR code",

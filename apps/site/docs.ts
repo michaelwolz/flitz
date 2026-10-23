@@ -11,6 +11,18 @@ const serverDoc = (name: string) => file(`../server/docs/${name}`);
 
 export const docsPages: DocsPage[] = [
   {
+    slug: "getting-started",
+    group: "Use flitz",
+    source: file("./docs/getting-started.md"),
+    description: "Create your account and your first link, and share its short URL.",
+  },
+  {
+    slug: "links",
+    group: "Use flitz",
+    source: file("./docs/links.md"),
+    description: "Send each visitor to the right target by device or country.",
+  },
+  {
     slug: "self-hosting",
     group: "Run flitz",
     source: serverDoc("self-hosting.md"),

@@ -182,6 +182,7 @@ test("ADMIN_EMAILS users become admin, are locked, and switch off the first-user
   expect(demoted).toMatchObject({ status: 403, body: { code: "FORBIDDEN" } });
   expect((await call(app, { cookie: boss.cookie }, "DELETE", `/api/users/${deputy.userId}`)).status).toBe(403);
   expect((await call(app, { cookie: boss.cookie }, "PATCH", `/api/users/${deputy.userId}`, { role: "admin" })).status).toBe(200);
+  expect((await call(app, { cookie: boss.cookie }, "PATCH", `/api/users/${deputy.userId}`, { name: "Deputy" })).status).toBe(200);
 });
 
 test("the last admin can't be demoted or removed", async () => {
@@ -192,6 +193,20 @@ test("the last admin can't be demoted or removed", async () => {
   const lastAdmin = { status: 409, body: { code: "LAST_ADMIN" } };
   expect(await call(app, { cookie: solo.cookie }, "PATCH", `/api/users/${solo.userId}`, { role: "member" })).toMatchObject(lastAdmin);
   expect(await call(app, { cookie: solo.cookie }, "DELETE", `/api/users/${solo.userId}`)).toMatchObject(lastAdmin);
+  expect((await call(app, { cookie: solo.cookie }, "PATCH", `/api/users/${solo.userId}`, { name: "Solo" })).status).toBe(200);
+});
+
+test("admins rename other users within the name rules", async () => {
+  const app = await instance(await testEnv({ DEFAULT_ROLE: "member" }));
+  const admin = await verifiedUser(app, "renamer@example.com");
+  const member = await verifiedUser(app, "renamed@example.com");
+  const rename = (name: string, cookie = admin.cookie, id = member.userId) => call(app, { cookie }, "PATCH", `/api/users/${id}`, { name });
+
+  expect(await rename("  Ada Lovelace ")).toMatchObject({ status: 200, body: { name: "Ada Lovelace", role: "member" } });
+  expect(await rename(" ")).toMatchObject({ status: 400, body: { message: "name: Enter a name." } });
+  expect(await rename("x".repeat(101))).toMatchObject({ status: 400, body: { message: "name: Use a name of at most 100 characters." } });
+  expect(await call(app, { cookie: admin.cookie }, "PATCH", `/api/users/${member.userId}`, {})).toMatchObject({ status: 400 });
+  expect(await rename("Mallory", member.cookie, admin.userId)).toMatchObject({ status: 403, body: { code: "FORBIDDEN" } });
 });
 
 test("repeated failed sign-ins from one client get 429 on every replica, while other clients can still try", async () => {

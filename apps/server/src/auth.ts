@@ -51,7 +51,7 @@ export function assertAuthSecret(env: NodeJS.ProcessEnv) {
   );
 }
 
-const maxNameLength = 100;
+export const maxNameLength = 100;
 const verificationSeconds = 3600;
 
 function assertNameLength(name: unknown) {

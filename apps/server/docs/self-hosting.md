@@ -102,7 +102,7 @@ Admins change the time zone stats are counted in (default `UTC`), the retention 
 
 ## Users and sign-up
 
-Every user has one role for the whole instance: admin, member or viewer, see [Concepts](concepts.md#instance-and-access). Admins manage users on the Users page: they see everyone with their role, change roles, remove users, invite people and revoke invitations.
+Every user has one role for the whole instance: admin, member or viewer, see [Concepts](concepts.md#instance-and-access). Admins manage users on the Users page: they see everyone with their role, change roles and names, remove users, invite people and revoke invitations. Everyone changes their own name by clicking it in the sidebar.
 
 Who can sign up, with a password, a magic link, Google or GitHub:
 

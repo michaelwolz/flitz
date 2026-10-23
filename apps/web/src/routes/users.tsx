@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useLoaderData, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Confirm } from "@/components/confirm";
+import { NameDialog } from "@/components/name-dialog";
 import { focusPageHeading, PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +149,23 @@ export function Users() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
                 <TableCell className="text-right">
+                  {!isYou && (
+                    <NameDialog
+                      trigger={
+                        <Button variant="ghost" size="sm" aria-label={t("users.renameLabel", { name })}>
+                          {t("users.rename")}
+                        </Button>
+                      }
+                      title={t("users.renameTitle", { name })}
+                      description={t("users.renameText")}
+                      name={user.name}
+                      save={async (newName) => {
+                        await api<UserRow>(`/users/${user.id}`, { name: newName }, "PATCH");
+                        await revalidator.revalidate();
+                        toast.success(t("users.renamed", { name, newName }));
+                      }}
+                    />
+                  )}
                   {editable && (
                     <Confirm
                       trigger={

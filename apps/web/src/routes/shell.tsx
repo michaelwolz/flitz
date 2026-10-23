@@ -1,5 +1,5 @@
 import { Bot, BookOpen, ChartLine, Globe, KeyRound, Link2, LogOut, type LucideIcon, Moon, Settings, Sun, Users } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type LoaderFunctionArgs,
@@ -15,21 +15,9 @@ import {
 import { toast } from "sonner";
 import lockupDark from "../../../../docs/brand/flitz-lockup-dark.svg";
 import lockupLight from "../../../../docs/brand/flitz-lockup-light.svg";
+import { NameDialog } from "@/components/name-dialog";
 import { focusPageHeading } from "@/components/page-header";
-import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Sidebar,
   SidebarContent,
@@ -45,7 +33,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { auth, authClient, type Scope, scopesOf, signInPath, useAction } from "@/lib/api";
+import { auth, authClient, type Scope, scopesOf, signInPath } from "@/lib/api";
 import { setTheme, useTheme } from "@/lib/theme";
 import { avatar } from "@/lib/utils";
 
@@ -80,66 +68,6 @@ function NavItem({ to, icon: Icon, label, active }: { to: string; icon: LucideIc
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
-  );
-}
-
-function NameDialog({ name, email, onSaved }: { name: string; email: string; onSaved: (name: string) => void }) {
-  const { t } = useTranslation();
-  const save = useAction();
-  const [open, setOpen] = useState(false);
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const newName = String(new FormData(event.currentTarget).get("name")).trim();
-    save.run(async () => {
-      await auth(authClient.updateUser({ name: newName }));
-      onSaved(newName);
-      setOpen(false);
-      toast.success(t("shell.nameSaved"));
-    });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="-m-1 flex min-w-0 flex-1 items-center gap-2 rounded-full p-1 text-left hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          <span aria-hidden="true" className={avatar}>
-            {(name || email).charAt(0).toUpperCase()}
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate font-medium">{name}</span>
-            <span className="truncate text-caption font-normal text-muted-foreground">{email}</span>
-          </span>
-          <span className="sr-only">{t("shell.changeName")}</span>
-        </button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("shell.changeName")}</DialogTitle>
-          <DialogDescription>{t("shell.changeNameText")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <Field>
-            <FieldLabel htmlFor="own-name">{t("auth.name")}</FieldLabel>
-            <Input id="own-name" name="name" defaultValue={name} autoComplete="name" required />
-          </Field>
-          <FieldError>{save.error}</FieldError>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                {t("common.cancel")}
-              </Button>
-            </DialogClose>
-            <SubmitButton pending={save.pending} pendingLabel={t("shell.savingName")}>
-              {t("shell.saveName")}
-            </SubmitButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -211,7 +139,31 @@ export function Shell() {
             </SidebarMenuItem>
           </SidebarMenu>
           <div className="flex items-center gap-2 border-t border-sidebar-border px-2 pt-3">
-            <NameDialog name={name} email={user.email} onSaved={setName} />
+            <NameDialog
+              trigger={
+                <button
+                  type="button"
+                  className="-m-1 flex min-w-0 flex-1 items-center gap-2 rounded-full p-1 text-left hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <span aria-hidden="true" className={avatar}>
+                    {(name || user.email).charAt(0).toUpperCase()}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-medium">{name}</span>
+                    <span className="truncate text-caption font-normal text-muted-foreground">{user.email}</span>
+                  </span>
+                  <span className="sr-only">{t("shell.changeName")}</span>
+                </button>
+              }
+              title={t("shell.changeName")}
+              description={t("shell.changeNameText")}
+              name={name}
+              save={async (newName) => {
+                await auth(authClient.updateUser({ name: newName }));
+                setName(newName);
+                toast.success(t("shell.nameSaved"));
+              }}
+            />
             <Button
               variant="ghost"
               size="icon-sm"

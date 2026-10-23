@@ -3,7 +3,7 @@ import { z } from "@hono/zod-openapi";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { apiError, handleApiError, invalidRequest } from "./api.ts";
-import { type Auth, type Mailer, paragraphs, plain } from "./auth.ts";
+import { type Auth, type Mailer, maxNameLength, paragraphs, plain } from "./auth.ts";
 import { type Role, roles, scopesOf } from "./scopes.ts";
 
 export type UserRow = { id: string; name: string; email: string; role: Role; emailVerified: boolean; createdAt: string; locked: boolean };
@@ -12,6 +12,7 @@ export type InvitationRow = { id: string; email: string; role: Role; expiresAt: 
 const invitationHours = 48;
 
 const role = z.enum(roles, { error: `Choose one of the roles ${roles.join(", ")}.` });
+const name = z.string().trim().min(1, "Enter a name.").max(maxNameLength, `Use a name of at most ${maxNameLength} characters.`);
 
 function json<T extends z.ZodType>(schema: T) {
   return validator("json", (value): z.infer<T> => {
@@ -41,8 +42,8 @@ export function userRoutes(db: Db, auth: Auth, baseUrl: string, adminEmails: str
     expiresAt: invitation.expiresAt.toISOString(),
   });
 
-  /** Changes a user's role, or removes them without a role, keeping at least one verified admin. */
-  function changeUser(id: string, newRole?: Role) {
+  /** Changes a user's role or name, or removes them without a change, keeping at least one verified admin. */
+  function changeUser(id: string, change?: { role?: Role; name?: string }) {
     return db.transaction(async (tx) => {
       const verifiedAdmins = await tx
         .select({ id: users.id })
@@ -52,18 +53,21 @@ export function userRoutes(db: Db, auth: Auth, baseUrl: string, adminEmails: str
         .for("update");
       const [user] = await tx.select().from(users).where(eq(users.id, id));
       if (!user) throw apiError(404, "NOT_FOUND", "This user does not exist.");
-      if (adminEmails.includes(user.email) && newRole !== "admin") {
-        throw apiError(
-          403,
-          "FORBIDDEN",
-          `${user.email} is listed in ADMIN_EMAILS, so you can only make them admin, not remove them or give them another role. Remove them from ADMIN_EMAILS first.`,
-        );
+      if (!change || change.role) {
+        const newRole = change?.role;
+        if (adminEmails.includes(user.email) && newRole !== "admin") {
+          throw apiError(
+            403,
+            "FORBIDDEN",
+            `${user.email} is listed in ADMIN_EMAILS, so you can only make them admin, not remove them or give them another role. Remove them from ADMIN_EMAILS first.`,
+          );
+        }
+        if (newRole !== "admin" && verifiedAdmins.length === 1 && verifiedAdmins[0].id === id) {
+          throw apiError(409, "LAST_ADMIN", "flitz needs at least one admin. Make another user admin first.");
+        }
       }
-      if (newRole !== "admin" && verifiedAdmins.length === 1 && verifiedAdmins[0].id === id) {
-        throw apiError(409, "LAST_ADMIN", "flitz needs at least one admin. Make another user admin first.");
-      }
-      const [changed] = newRole
-        ? await tx.update(users).set({ role: newRole }).where(eq(users.id, id)).returning()
+      const [changed] = change
+        ? await tx.update(users).set(change).where(eq(users.id, id)).returning()
         : await tx.delete(users).where(eq(users.id, id)).returning();
       return toUserRow(changed);
     });
@@ -87,8 +91,14 @@ export function userRoutes(db: Db, auth: Auth, baseUrl: string, adminEmails: str
       ]);
       return c.json({ users: userRows.map(toUserRow), invitations: invitationRows.map(toInvitationRow) });
     })
-    .patch("/:id{[0-9a-f-]{36}}", json(z.strictObject({ role })), async (c) =>
-      c.json(await changeUser(c.req.param("id"), c.req.valid("json").role)),
+    .patch(
+      "/:id{[0-9a-f-]{36}}",
+      json(
+        z
+          .strictObject({ role: role.optional(), name: name.optional() })
+          .refine((change) => change.role !== undefined || change.name !== undefined, "Send a role or a name."),
+      ),
+      async (c) => c.json(await changeUser(c.req.param("id"), c.req.valid("json"))),
     )
     .delete("/:id{[0-9a-f-]{36}}", async (c) => {
       await changeUser(c.req.param("id"));

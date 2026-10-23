@@ -61,7 +61,7 @@ Query parameters on a short URL, such as `?utm_campaign=spring`, are passed on t
 
 ## Deactivate a link
 
-To take a link offline, open it and choose **Deactivate**. Its short URL stops redirecting, but the link keeps its slug and its clicks, and you can reactivate it at any time. Visitors of a deactivated link land on the domain's fallback URL or on a not-found page.
+To take a link offline, open it and choose **Deactivate**. Its short URL stops redirecting, but the link keeps its slug and its clicks, and you can reactivate it at any time. Visitors of a deactivated link land on the [fallback URL](domains.html#fallback-url) of its domain or on a not-found page.
 
 Only an admin can delete a deactivated link, in the web app. That also deletes its clicks and frees its slug for a new link, so think twice before deleting a short URL that is still printed somewhere.
 

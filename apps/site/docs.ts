@@ -23,6 +23,18 @@ export const docsPages: DocsPage[] = [
     description: "Send each visitor to the right target by device or country.",
   },
   {
+    slug: "stats",
+    group: "Use flitz",
+    source: file("./docs/stats.md"),
+    description: "What flitz counts, what it never stores and how to read the numbers.",
+  },
+  {
+    slug: "domains",
+    group: "Use flitz",
+    source: file("./docs/domains.md"),
+    description: "Serve short URLs on your own domain, with a fallback URL.",
+  },
+  {
     slug: "self-hosting",
     group: "Run flitz",
     source: serverDoc("self-hosting.md"),

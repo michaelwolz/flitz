@@ -1,5 +1,8 @@
 # Agent notes
 
+Self-hostable, AI-first link shortener with device/country redirect rules and privacy-preserving click analytics. One instance serves one team. License: Apache-2.0.
+
+- Keep code and tests simple: smallest complete change, few tests through the HTTP seam (in-process app + Testcontainers Postgres/Redis), happy path plus the edge cases that actually bite. No mocks of our own code, no tests of internals.
 - Write the product name in lowercase, flitz, in all user-visible text, also at the start of a sentence, and use the words defined in `GLOSSARY.md`.
 - There is no build step: Node runs the TypeScript directly, so relative imports must end in `.ts` (a `.js` import passes `tsc` and Vitest but fails in the container) and only erasable syntax is allowed (no enums, namespaces or parameter properties).
 - Migrations run on every process start under a Postgres advisory lock (`connectAndMigrate`), so processes may start at once. During a rolling upgrade the previous release keeps running on the migrated schema, so every migration must work with the previous release's code: add tables and columns now (expand), drop or rename them only in a later release that no longer reads them (contract).

@@ -195,6 +195,18 @@ test("an admin saves the instance settings", async ({ page }) => {
   await expect(page.getByRole("spinbutton", { name: "Keep clicks for (months)" })).toHaveValue("24");
 });
 
+test("a user changes their own name", async ({ page }) => {
+  await signUp(page, "Frances");
+  await page.getByRole("button", { name: /Change your name$/ }).click();
+  await page.getByRole("dialog").getByLabel("Name").fill("  Frances Allen ");
+  await page.getByRole("button", { name: "Save name" }).click();
+  await expect(page.getByText("Name saved")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Frances Allen frances@example\.com/ })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: /^Frances Allen frances@example\.com/ })).toBeVisible();
+});
+
 test("create a link with a custom slug on the instance domain, follow it, then deactivate and delete it", async ({ page }) => {
   const flitz = process.env.FLITZ_URL!;
   await signUp(page, "Katherine");

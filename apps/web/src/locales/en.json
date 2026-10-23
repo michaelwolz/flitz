@@ -99,7 +99,12 @@
     "lightTheme": "Switch to light theme",
     "darkTheme": "Switch to dark theme",
     "signOut": "Sign out",
-    "instance": "Instance"
+    "instance": "Instance",
+    "changeName": "Change your name",
+    "changeNameText": "Other users of this instance see this name, also in invitations you send.",
+    "saveName": "Save name",
+    "savingName": "Saving…",
+    "nameSaved": "Name saved"
   },
   "links": {
     "title": "Links",

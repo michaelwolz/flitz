@@ -16,7 +16,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, type InvitationRow, type Role, roles, type UserRow, useAction } from "@/lib/api";
 import { avatar, formatDate } from "@/lib/utils";
-import { useShell } from "./shell.tsx";
+import { useSetOwnName, useShell } from "./shell.tsx";
 
 export async function usersLoader() {
   const data = await api<{ users: UserRow[]; invitations: InvitationRow[] }>("/users");
@@ -37,6 +37,7 @@ function RoleOptions() {
 export function Users() {
   const { t } = useTranslation();
   const { user: me } = useShell();
+  const setOwnName = useSetOwnName();
   const { users, invitations, now } = useLoaderData<typeof usersLoader>();
   const revalidator = useRevalidator();
   const invite = useAction();
@@ -149,23 +150,22 @@ export function Users() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
                 <TableCell className="text-right">
-                  {!isYou && (
-                    <NameDialog
-                      trigger={
-                        <Button variant="ghost" size="sm" aria-label={t("users.renameLabel", { name })}>
-                          {t("users.rename")}
-                        </Button>
-                      }
-                      title={t("users.renameTitle", { name })}
-                      description={t("users.renameText")}
-                      name={user.name}
-                      save={async (newName) => {
-                        await api<UserRow>(`/users/${user.id}`, { name: newName }, "PATCH");
-                        await revalidator.revalidate();
-                        toast.success(t("users.renamed", { name, newName }));
-                      }}
-                    />
-                  )}
+                  <NameDialog
+                    trigger={
+                      <Button variant="ghost" size="sm" aria-label={t("users.renameLabel", { name })}>
+                        {t("users.rename")}
+                      </Button>
+                    }
+                    title={isYou ? t("shell.changeName") : t("users.renameTitle", { name })}
+                    description={isYou ? t("shell.changeNameText") : t("users.renameText")}
+                    name={user.name}
+                    save={async (newName) => {
+                      await api<UserRow>(`/users/${user.id}`, { name: newName }, "PATCH");
+                      if (isYou) setOwnName(newName);
+                      await revalidator.revalidate();
+                      toast.success(t("users.renamed", { name, newName }));
+                    }}
+                  />
                   {editable && (
                     <Confirm
                       trigger={

@@ -1,5 +1,5 @@
 import { Bot, BookOpen, ChartLine, Globe, KeyRound, Link2, LogOut, type LucideIcon, Moon, Settings, Sun, Users } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type LoaderFunctionArgs,
@@ -10,6 +10,7 @@ import {
   ScrollRestoration,
   useLocation,
   useNavigate,
+  useRevalidator,
   useRouteLoaderData,
 } from "react-router";
 import { toast } from "sonner";
@@ -47,6 +48,11 @@ export async function shellLoader({ request }: LoaderFunctionArgs) {
 export function useShell() {
   return useRouteLoaderData<typeof shellLoader>("shell")!;
 }
+
+const OwnName = createContext<(name: string) => void>(() => {});
+
+/** Updates the name the sidebar shows for the signed-in user. */
+export const useSetOwnName = () => useContext(OwnName);
 
 const navButton = "h-9 rounded-full px-3 data-[active=true]:font-semibold";
 
@@ -91,6 +97,7 @@ export function Shell() {
   const { pathname } = useLocation();
   const { user, can } = useShell();
   const [name, setName] = useState(user.name);
+  const revalidator = useRevalidator();
 
   async function signOut() {
     await authClient.signOut();
@@ -161,6 +168,7 @@ export function Shell() {
               save={async (newName) => {
                 await auth(authClient.updateUser({ name: newName }));
                 setName(newName);
+                await revalidator.revalidate();
                 toast.success(t("shell.nameSaved"));
               }}
             />
@@ -183,7 +191,9 @@ export function Shell() {
           <SidebarTrigger />
         </div>
         <div className="w-full max-w-[1200px] px-4 py-8 md:px-10 md:pt-10 md:pb-12">
-          <Outlet />
+          <OwnName value={setName}>
+            <Outlet />
+          </OwnName>
         </div>
       </SidebarInset>
     </SidebarProvider>

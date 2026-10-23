@@ -205,6 +205,14 @@ test("a user changes their own name", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByRole("button", { name: /^Frances Allen frances@example\.com/ })).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Users" }).click();
+  const row = page.getByRole("row", { name: /frances@example\.com/ });
+  await row.getByRole("button", { name: "Rename Frances Allen" }).click();
+  await page.getByRole("dialog").getByLabel("Name").fill("Fran Allen");
+  await page.getByRole("button", { name: "Save name" }).click();
+  await expect(row).toContainText("Fran Allen");
+  await expect(page.getByRole("button", { name: /^Fran Allen frances@example\.com/ })).toBeVisible();
 });
 
 test("create a link with a custom slug on the instance domain, follow it, then deactivate and delete it", async ({ page }) => {

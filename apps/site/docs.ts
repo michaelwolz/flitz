@@ -35,6 +35,12 @@ export const docsPages: DocsPage[] = [
     description: "Serve short URLs on your own domain, with a fallback URL.",
   },
   {
+    slug: "ai-agents",
+    group: "Use flitz",
+    source: file("./docs/ai-agents.md"),
+    description: "Let Claude, ChatGPT or Cursor manage links over MCP.",
+  },
+  {
     slug: "self-hosting",
     group: "Run flitz",
     source: serverDoc("self-hosting.md"),

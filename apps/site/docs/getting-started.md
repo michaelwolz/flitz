@@ -39,4 +39,5 @@ Choose **Copy** next to the short URL to copy it. Every link also has a QR code:
 - Send iPhones, Android phones or visitors from some countries to their own targets: [Links and redirect rules](links.html).
 - See who clicks, by country and device: [Clicks and stats](stats.html).
 - Use your own domain for short URLs: [Domains](domains.html).
+- Let your AI agent create links for you: [Connect an AI agent](ai-agents.html).
 - Invite your team: admins invite people on the **Users** page and pick their role, see [Concepts](concepts.html#instance-and-access).

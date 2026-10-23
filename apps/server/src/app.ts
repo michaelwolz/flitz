@@ -126,6 +126,7 @@ export async function createApp(
     serveStatic({ rewriteRequestPath: (path) => join(webApp, path.slice("/app".length)) }),
   );
   app.get("/app/*", cacheControl("no-cache"), serveStatic({ path: join(webApp, "index.html") }));
+  app.get("/", (c) => (c.var.domain === null ? c.redirect("/app/sign-up") : c.notFound()));
 
   app.get("/:slug", limits.redirects, async (c) => {
     const slug = c.req.param("slug").toLowerCase();

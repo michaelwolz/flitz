@@ -79,7 +79,7 @@ Every link has a QR code that encodes its short URL, never its target: `GET {{BA
 
 **Domain**: a hostname that serves short URLs.
 
-**Instance domain**: the domain the instance itself runs on. That is the hostname of `{{BASE_URL}}`. It serves short URLs without being added, and links get it when you leave out `domain`.
+**Instance domain**: the domain the instance itself runs on. That is the hostname of `{{BASE_URL}}`. It serves short URLs without being added, and links get it when you leave out `domain`. Its root, `{{BASE_URL}}/`, redirects to the sign-up page of the web app.
 
 **Custom domain**: a domain an admin has added to the instance. Add it with `addDomain` and point the domain at the instance with a CNAME record for the hostname whose target is the host of `{{BASE_URL}}` (for an apex domain such as example.com, which can't have a CNAME record, use an ALIAS or ANAME record, or A/AAAA records with that host's addresses). flitz doesn't check who owns the domain: it serves short URLs as soon as DNS points at the instance, and answers `404` for hosts that are neither the instance domain nor a custom domain. A custom domain serves only short URLs and QR codes, not the API or these docs. A custom domain without links, such as one added by mistake, can be deleted with `deleteDomain`; while any link is on it, active or deactivated, deleting it fails with `409 DOMAIN_HAS_LINKS`, because links are never deleted. Orphan clicks recorded for a deleted domain stay until the retention period removes them.
 

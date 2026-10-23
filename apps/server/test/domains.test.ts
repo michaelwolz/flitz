@@ -59,6 +59,7 @@ test("the same custom Slug works on two Domains, each redirecting by Host", asyn
   expect((await app.request("http://a.example.net/spring")).headers.get("location")).toBe("https://example.net/a");
   expect((await app.request("http://b.example.net/spring")).headers.get("location")).toBe("https://example.net/b");
   expect((await app.request("/spring")).status).toBe(404);
+  expect((await app.request("http://a.example.net/")).status).toBe(404);
 });
 
 test("unknown and deactivated Slugs go to the Fallback URL, or to the not-found page without one", async () => {

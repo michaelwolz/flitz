@@ -34,6 +34,12 @@ test("an upper-case Slug finds the Link", async () => {
   expect(response.headers.get("location")).toBe("https://example.com/landing?utm_source=print&lang=en");
 });
 
+test("the root of the Instance Domain redirects to the sign-up page", async () => {
+  const response = await app.request("/");
+  expect(response.status).toBe(302);
+  expect(response.headers.get("location")).toBe("/app/sign-up");
+});
+
 test("an unknown Slug answers 404", async () => {
   const response = await app.request("/nope234");
   expect(response.status).toBe(404);

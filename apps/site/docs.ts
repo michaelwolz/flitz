@@ -127,7 +127,7 @@ function home(all: Map<string, Rendered>) {
   const cards = grouped().map(
     ({ group, pages }) => `<section class="docs-group" aria-labelledby="group-${headingId(group)}">
   <div class="docs-group-head">
-    <span class="docs-group-icon">${groups[group].icon}</span>
+    <span class="card-icon">${groups[group].icon}</span>
     <div>
       <h2 id="group-${headingId(group)}">${group}</h2>
       <p>${groups[group].text}</p>

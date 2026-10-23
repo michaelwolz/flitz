@@ -65,7 +65,7 @@ Adding the query parameters of a short URL to the chosen target, except those th
 _Avoid_: Param forwarding, UTM forwarding
 
 **Deactivated Link**:
-A link that no longer redirects but keeps its slug and click history; links are never deleted through the API.
+A link that no longer redirects but keeps its slug and click history; only an admin can delete it, in the web app.
 _Avoid_: Deleted link, archived link
 
 ### Domains

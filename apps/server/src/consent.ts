@@ -15,7 +15,7 @@ const lockup = raw(
 
 const scopeDescriptions: Record<Scope, string> = {
   "links:read": "See links, their QR codes, the custom domains and the instance's settings.",
-  "links:write": "Create, edit, deactivate and reactivate links, and generate presets. Links are never deleted.",
+  "links:write": "Create, edit, deactivate and reactivate links, and generate presets.",
   "stats:read": "Read click stats and orphan clicks, and export clicks as CSV.",
   "domains:write": "Add, update and delete custom domains.",
   "instance:admin": "Manage API keys and instance settings.",

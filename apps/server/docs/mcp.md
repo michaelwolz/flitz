@@ -60,13 +60,13 @@ The connection can do what the key's scopes allow, as long as the admin who crea
 
 ## Scopes
 
-| Scope            | What it allows                                                                                |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| `links:read`     | See links, their QR codes, the custom domains and the instance's settings.                    |
-| `links:write`    | Create, edit, deactivate and reactivate links, and generate presets. Links are never deleted. |
-| `stats:read`     | Read click stats and orphan clicks, and export clicks as CSV.                                 |
-| `domains:write`  | Add, update and delete custom domains.                                                        |
-| `instance:admin` | Manage API keys and instance settings.                                                        |
+| Scope            | What it allows                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `links:read`     | See links, their QR codes, the custom domains and the instance's settings.                               |
+| `links:write`    | Create, edit, deactivate and reactivate links, and generate presets. No API key or app can delete links. |
+| `stats:read`     | Read click stats and orphan clicks, and export clicks as CSV.                                            |
+| `domains:write`  | Add, update and delete custom domains.                                                                   |
+| `instance:admin` | Manage API keys and instance settings.                                                                   |
 
 No tool deletes links. An agent can deactivate a link, which stops it redirecting but keeps its slug and click history, and reactivate it later.
 

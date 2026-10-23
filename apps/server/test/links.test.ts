@@ -1,9 +1,13 @@
+import { clicks, connectAndMigrate, eq } from "@flitzlink/db";
 import { afterAll, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
+import { createPartitions } from "../src/clicks.ts";
 import { call, testEnv, verifiedUser } from "./client.ts";
 
-const { app, close } = await createApp(await testEnv());
-afterAll(close);
+const env = await testEnv();
+const { app, close } = await createApp(env);
+const db = await connectAndMigrate(env.DATABASE_URL);
+afterAll(() => Promise.all([close(), db.$client.end()]));
 
 async function createLink(headers: Record<string, string>, body: object) {
   const { status, body: link } = await call(app, headers, "POST", "/api/links", body);
@@ -120,4 +124,36 @@ test("the OpenAPI spec is served under /api with each operation's Scope", async 
   const spec = await response.json();
   expect(spec.paths["/api/links"].post.security).toEqual([{ bearer: ["links:write"] }]);
   expect(spec.paths["/api/links/{id}"].get.security).toEqual([{ bearer: ["links:read"] }]);
+});
+
+test("an admin deletes a deactivated link with its clicks, which frees its slug; nobody else can", async () => {
+  const admin = { cookie: (await verifiedUser(app, "admin-delete@example.com")).cookie };
+  const member = await verifiedUser(app, "member-delete@example.com");
+  expect((await call(app, admin, "PATCH", `/api/users/${member.userId}`, { role: "member" })).status).toBe(200);
+  const { body: apiKey } = await call(app, admin, "POST", "/api/api-keys", {
+    name: "Agent",
+    scopes: ["links:read", "links:write", "instance:admin"],
+  });
+  const link = await createLink(admin, { defaultTarget: "https://example.com/old", slug: "summer-flyer" });
+  await createPartitions(db, [new Date()]);
+  await db.insert(clicks).values({
+    id: "deleted-link",
+    clickedAt: new Date(),
+    linkId: link.id,
+    slug: link.slug,
+    deviceType: "desktop",
+    query: {},
+    bot: false,
+    visitorHash: "visitor",
+  });
+  const remove = (headers: Record<string, string>) => call(app, headers, "DELETE", `/api/links/${link.id}`);
+
+  expect((await remove(admin)).body.code).toBe("LINK_ACTIVE");
+  await call(app, admin, "POST", `/api/links/${link.id}/deactivate`);
+  expect((await remove({ cookie: member.cookie })).status).toBe(403);
+  expect((await remove({ authorization: `Bearer ${apiKey.key}` })).status).toBe(401);
+
+  expect((await remove(admin)).status).toBe(204);
+  expect(await db.select().from(clicks).where(eq(clicks.linkId, link.id))).toEqual([]);
+  await createLink(admin, { defaultTarget: "https://example.com/new", slug: "summer-flyer" });
 });

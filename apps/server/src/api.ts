@@ -67,6 +67,8 @@ export function hashApiKey(key: string) {
   return createHash("sha256").update(key).digest("hex");
 }
 
+export type SessionUser = ReturnType<typeof authorizer>["sessionUser"];
+
 export function authorizer(db: Db, auth: Auth, baseUrl: string) {
   const verifyOptions = { issuer: new URL("/api/auth", baseUrl).href, audience: new URL("/api/mcp", baseUrl).href, typ: "at+jwt" };
   const jwksCacheKey = {};

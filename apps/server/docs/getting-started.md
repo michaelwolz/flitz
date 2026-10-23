@@ -59,7 +59,7 @@ flitz answers with a 302 to the default target. Query parameters on the short UR
 - Send visitors to different targets by device or country with redirect rules, or generate them with a preset. See [Concepts](concepts.md).
 - Get a QR code of the short URL: `GET {{BASE_URL}}/api/links/{id}/qr?format=svg` or `format=png`.
 - Use your own domain for short URLs: add it with `POST {{BASE_URL}}/api/domains` (it needs the `domains:write` scope) and point the domain at this instance with a CNAME record for the hostname whose target is the host of `{{BASE_URL}}` (for an apex domain such as example.com, which can't have a CNAME record, use an ALIAS or ANAME record, or A/AAAA records with that host's addresses). It serves short URLs as soon as DNS points at the instance.
-- Change a link with `PATCH {{BASE_URL}}/api/links/{id}`; the change takes effect immediately. Links are never deleted: deactivate one with `POST {{BASE_URL}}/api/links/{id}/deactivate`.
+- Change a link with `PATCH {{BASE_URL}}/api/links/{id}`; the change takes effect immediately. The API never deletes links: deactivate one with `POST {{BASE_URL}}/api/links/{id}/deactivate`.
 
 ## Errors
 

@@ -258,6 +258,10 @@
     "reactivating": "Reactivating…",
     "deactivated": "Link deactivated",
     "reactivated": "Link reactivated",
+    "delete": "Delete link",
+    "deleteTitle": "Delete this link?",
+    "deleteText": "The link and all its clicks are deleted for good, and its slug becomes free. If a new link takes the slug, everyone who still has {{shortUrl}}, in print or as a QR code, lands on the new link's target.",
+    "deleted": "Link deleted",
     "leaveTitle": "Discard your changes?",
     "leaveText": "You have unsaved changes to this link. If you leave now, they're lost.",
     "leave": "Discard changes"
@@ -357,7 +361,7 @@
   },
   "scopes": {
     "linksRead": "See links, their QR codes and the custom domains.",
-    "linksWrite": "Create, edit, deactivate and reactivate links, and generate presets. Links are never deleted.",
+    "linksWrite": "Create, edit, deactivate and reactivate links, and generate presets. No API key or app can delete links.",
     "statsRead": "Read click stats and orphan clicks, and export clicks as CSV.",
     "domainsWrite": "Add, update and delete custom domains.",
     "instanceAdmin": "Manage API keys and instance settings."
@@ -399,7 +403,7 @@
     "generatedSlugs": "Slugs here are generated, unless you choose one when you create a link.",
     "delete": "Delete domain",
     "deleteTitle": "Delete {{hostname}}?",
-    "deleteText": "Only a domain without links can be deleted, because links are never deleted.",
+    "deleteText": "Only a domain without links can be deleted. An admin can delete its links once they are deactivated.",
     "deleted": "{{hostname}} deleted"
   },
   "users": {

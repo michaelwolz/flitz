@@ -273,7 +273,7 @@ export function linkRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
         path: "/links/{id}/deactivate",
         operationId: "deactivateLink",
         summary: "Deactivate a link",
-        description: "Stops a link from redirecting. It keeps its slug and click history and can be reactivated. Links are never deleted.",
+        description: "Stops a link from redirecting. It keeps its slug and click history and can be reactivated.",
         request: { params: linkParams },
         responses: { 200: jsonResponse("The deactivated link", Link) },
       }),

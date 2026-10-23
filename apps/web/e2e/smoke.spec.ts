@@ -195,7 +195,7 @@ test("an admin saves the instance settings", async ({ page }) => {
   await expect(page.getByRole("spinbutton", { name: "Keep clicks for (months)" })).toHaveValue("24");
 });
 
-test("create a link with a custom slug on the instance domain and follow it", async ({ page }) => {
+test("create a link with a custom slug on the instance domain, follow it, then deactivate and delete it", async ({ page }) => {
   const flitz = process.env.FLITZ_URL!;
   await signUp(page, "Katherine");
 
@@ -208,6 +208,12 @@ test("create a link with a custom slug on the instance domain and follow it", as
   const response = await page.request.get(`${flitz}/open-day`, { maxRedirects: 0 });
   expect(response.status()).toBe(302);
   expect(response.headers().location).toBe("https://example.com/open-day");
+
+  await page.getByRole("button", { name: "Deactivate" }).click();
+  await expect(page.getByText("Link deactivated")).toBeVisible();
+  await page.getByRole("button", { name: "Delete link" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete link" }).click();
+  await expect(page.getByText("Link deleted")).toBeVisible();
 });
 
 test("a signed-out deep link returns to the same page after sign-in", async ({ page, request }) => {

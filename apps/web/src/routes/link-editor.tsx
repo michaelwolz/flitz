@@ -1,4 +1,4 @@
-import { ChartLine, CircleAlert, Globe, Monitor, Smartphone } from "lucide-react";
+import { ChartLine, CircleAlert, Globe, Monitor, Smartphone, Trash2 } from "lucide-react";
 import { type ComponentProps, type FormEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type LoaderFunctionArgs, Link as RouterLink, useBeforeUnload, useBlocker, useLoaderData, useNavigate } from "react-router";
@@ -52,7 +52,9 @@ function Editor({ link: loaded, domains }: Awaited<ReturnType<typeof editorLoade
   const save = useAction();
   const applyPreset = useAction();
   const toggle = useAction();
-  const readOnly = !useShell().can("links:write");
+  const remove = useAction();
+  const { can } = useShell();
+  const readOnly = !can("links:write");
   const host = link ? new URL(link.shortUrl).host : domain || location.host;
   const dirty = useRef(false);
   const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty.current && currentLocation.pathname !== nextLocation.pathname);
@@ -119,6 +121,15 @@ function Editor({ link: loaded, domains }: Awaited<ReturnType<typeof editorLoade
     toggle.run(async () => {
       setLink(await api<Link>(`/links/${link!.id}/${active ? "reactivate" : "deactivate"}`, {}));
       toast.success(active ? t("editor.reactivated") : t("editor.deactivated"));
+    });
+  }
+
+  function deleteLink() {
+    remove.run(async () => {
+      await api(`/links/${link!.id}`, undefined, "DELETE");
+      dirty.current = false;
+      toast.success(t("editor.deleted"));
+      navigate("/");
     });
   }
 
@@ -369,6 +380,21 @@ function Editor({ link: loaded, domains }: Awaited<ReturnType<typeof editorLoade
                     {link.active ? t("editor.deactivate") : t("editor.reactivate")}
                   </SubmitButton>
                   <FieldError>{toggle.error}</FieldError>
+                  {!link.active && can("instance:admin") && (
+                    <Confirm
+                      trigger={
+                        <Button variant="ghost" size="sm" className="text-destructive">
+                          <Trash2 aria-hidden="true" />
+                          {t("editor.delete")}
+                        </Button>
+                      }
+                      title={t("editor.deleteTitle")}
+                      description={t("editor.deleteText", { shortUrl: link.shortUrl })}
+                      action={t("editor.delete")}
+                      onConfirm={deleteLink}
+                    />
+                  )}
+                  <FieldError>{remove.error}</FieldError>
                 </CardFooter>
               </Card>
             )}

@@ -24,15 +24,15 @@ These are the words flitz uses in its API, its MCP tools and these docs. Each te
 
 ### Scopes
 
-| Scope            | What it allows                                                                                |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| `links:read`     | See links, their QR codes, the custom domains and the instance's settings.                    |
-| `links:write`    | Create, edit, deactivate and reactivate links, and generate presets. Links are never deleted. |
-| `stats:read`     | Read click stats and orphan clicks, and export clicks as CSV.                                 |
-| `domains:write`  | Add, update and delete custom domains.                                                        |
-| `instance:admin` | Manage API keys and instance settings.                                                        |
+| Scope            | What it allows                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `links:read`     | See links, their QR codes, the custom domains and the instance's settings.                               |
+| `links:write`    | Create, edit, deactivate and reactivate links, and generate presets. No API key or app can delete links. |
+| `stats:read`     | Read click stats and orphan clicks, and export clicks as CSV.                                            |
+| `domains:write`  | Add, update and delete custom domains.                                                                   |
+| `instance:admin` | Manage API keys and instance settings.                                                                   |
 
-A request without the scope gets `403 FORBIDDEN`. There is no scope to delete links, because links are never deleted.
+A request without the scope gets `403 FORBIDDEN`. There is no scope to delete links: only an admin can delete a deactivated link, in the web app.
 
 ## Links
 
@@ -65,7 +65,7 @@ A rule looks like this:
 
 **Query passthrough**: adding the query parameters of a short URL to the chosen target, except those the target already has: the target's own parameters always win. When the target is on Google Play and has no `referrer`, the short URL's `utm_*` parameters go into Play's `referrer`; when it is on the App Store and has no `ct`, `utm_campaign` becomes the campaign token `ct`.
 
-**Deactivated link**: a link that no longer redirects but keeps its slug and click history. Reactivate it to make it redirect again. Links are never deleted through the API.
+**Deactivated link**: a link that no longer redirects but keeps its slug and click history. Reactivate it to make it redirect again. Only an admin can delete it, in the web app: that deletes its click history and frees its slug for a new link.
 
 ### How a short URL answers
 
@@ -81,7 +81,7 @@ Every link has a QR code that encodes its short URL, never its target: `GET {{BA
 
 **Instance domain**: the domain the instance itself runs on. That is the hostname of `{{BASE_URL}}`. It serves short URLs without being added, and links get it when you leave out `domain`. Its root, `{{BASE_URL}}/`, redirects to the sign-up page of the web app.
 
-**Custom domain**: a domain an admin has added to the instance. Add it with `addDomain` and point the domain at the instance with a CNAME record for the hostname whose target is the host of `{{BASE_URL}}` (for an apex domain such as example.com, which can't have a CNAME record, use an ALIAS or ANAME record, or A/AAAA records with that host's addresses). flitz doesn't check who owns the domain: it serves short URLs as soon as DNS points at the instance, and answers `404` for hosts that are neither the instance domain nor a custom domain. A custom domain serves only short URLs and QR codes, not the API or these docs. A custom domain without links, such as one added by mistake, can be deleted with `deleteDomain`; while any link is on it, active or deactivated, deleting it fails with `409 DOMAIN_HAS_LINKS`, because links are never deleted. Orphan clicks recorded for a deleted domain stay until the retention period removes them.
+**Custom domain**: a domain an admin has added to the instance. Add it with `addDomain` and point the domain at the instance with a CNAME record for the hostname whose target is the host of `{{BASE_URL}}` (for an apex domain such as example.com, which can't have a CNAME record, use an ALIAS or ANAME record, or A/AAAA records with that host's addresses). flitz doesn't check who owns the domain: it serves short URLs as soon as DNS points at the instance, and answers `404` for hosts that are neither the instance domain nor a custom domain. A custom domain serves only short URLs and QR codes, not the API or these docs. A custom domain without links, such as one added by mistake, can be deleted with `deleteDomain`; while any link is on it, active or deactivated, deleting it fails with `409 DOMAIN_HAS_LINKS`. Orphan clicks recorded for a deleted domain stay until the retention period removes them.
 
 **Fallback URL**: where a domain sends visitors whose slug is unknown or belongs to a deactivated link. Set it per custom domain; without one, visitors see a not-found page.
 

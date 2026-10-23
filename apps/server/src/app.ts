@@ -14,6 +14,7 @@ import { docs } from "./docs.ts";
 import { domainRoutes } from "./domains.ts";
 import { connectStores, lowercaseList, required, version, wholeNumber } from "./env.ts";
 import { createLinkCache, type DomainEnv } from "./link-cache.ts";
+import { linkDeletionRoutes } from "./link-deletion.ts";
 import { linkRoutes, reservedSlugs, slugPattern } from "./links.ts";
 import { mcpEndpoint } from "./mcp.ts";
 import { errorPage, notFoundPage } from "./not-found-page.ts";
@@ -110,6 +111,7 @@ export async function createApp(
   app.get("/api/social-providers", (c) => c.json(Object.keys(auth.options.socialProviders)));
   app.all("/api/mcp", mcpEndpoint(routes, api.request, access, new URL("/.well-known/oauth-protected-resource/api/mcp", baseUrl).href));
   app.route("/api/connected-apps", connectedAppRoutes(db, sessionUser));
+  app.route("/api/links", linkDeletionRoutes(db, sessionUser));
   app.route("/api/users", userRoutes(db, auth, baseUrl, adminEmails, sendEmail));
   app.route("/", api);
   app.route("/docs", await docs(baseUrl));

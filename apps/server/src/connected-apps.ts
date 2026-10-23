@@ -1,9 +1,9 @@
 import { and, type Db, desc, eq, oauthAccessTokens, oauthClients, oauthConsents, oauthRefreshTokens, sql, users } from "@flitzlink/db";
 import { Hono } from "hono";
-import { apiError, type authorizer, handleApiError } from "./api.ts";
+import { apiError, handleApiError, type SessionUser } from "./api.ts";
 import { scopes, scopesOf } from "./scopes.ts";
 
-export function connectedAppRoutes(db: Db, sessionUser: ReturnType<typeof authorizer>["sessionUser"]) {
+export function connectedAppRoutes(db: Db, sessionUser: SessionUser) {
   async function visibleConsents(headers: Headers) {
     const user = await sessionUser(headers);
     if (!user) throw apiError(401, "UNAUTHORIZED", "Sign in to see the apps connected to flitz.");

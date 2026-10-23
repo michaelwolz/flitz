@@ -129,7 +129,7 @@ export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
         operationId: "deleteDomain",
         summary: "Delete a custom domain",
         description:
-          "Deletes a custom domain that has no links, such as one added by mistake. Refused while any link is on it, active or deactivated, because links are never deleted.",
+          "Deletes a custom domain that has no links, such as one added by mistake. Refused while any link is on it, active or deactivated.",
         request: { params: domainParams },
         responses: { 204: { description: "The domain is deleted" } },
       }),
@@ -140,7 +140,7 @@ export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
           throw apiError(
             409,
             "DOMAIN_HAS_LINKS",
-            `${domain.hostname} can't be deleted because links are on it, including deactivated ones. Links are never deleted, so their domain stays.`,
+            `${domain.hostname} can't be deleted because links are on it, including deactivated ones. An admin can delete deactivated links in the web app first.`,
           );
         }
         await db.delete(domains).where(eq(domains.id, domain.id));

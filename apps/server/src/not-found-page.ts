@@ -72,7 +72,8 @@ footer {
   width: 100%; max-width: var(--page-width); padding-top: 16px; border-top: 1px solid var(--border);
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 18px; color: var(--muted-foreground);
 }
-footer span { display: flex; align-items: center; gap: 8px; }
+footer a { display: flex; align-items: center; gap: 8px; color: inherit; text-underline-offset: 3px; }
+footer a:hover { text-decoration-thickness: 2px; }
 </style>
 </head>
 <body>
@@ -82,8 +83,8 @@ footer span { display: flex; align-items: center; gap: 8px; }
 ${body}
 </main>
 <footer>
-<span><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FF6B5B"/><g transform="translate(2 -1)" fill="none" stroke="#2E1065" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="10" d="M29.3 54 35.7 24C37.1 17.4 43.6 12 50.3 12M26 32H44"/><path stroke-width="6" d="M11 23h10M8 41h11"/></g></svg>
-Short URLs by flitz</span>
+<a href="https://github.com/michaelwolz/flitz"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FF6B5B"/><g transform="translate(2 -1)" fill="none" stroke="#2E1065" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="10" d="M29.3 54 35.7 24C37.1 17.4 43.6 12 50.3 12M26 32H44"/><path stroke-width="6" d="M11 23h10M8 41h11"/></g></svg>
+Short URLs by flitz</a>
 </footer>
 </body>
 </html>`;

@@ -43,7 +43,7 @@
             One Docker image next to Postgres and Redis. Start it with docker compose from a checkout of the repository, or on Kubernetes
             with the Helm chart. The image runs as a server, which answers short URLs, the web app, the API and MCP, and as a worker, which
             writes clicks to Postgres. flitz doesn't handle TLS, so put a reverse proxy or ingress in front of it. The
-            <a href="%DOCS_URL%/self-hosting.md">self-hosting guide</a> lists every setting.
+            <a href="./docs/self-hosting.html#settings">self-hosting guide</a> lists every setting.
           </p>
           <h3>Which AI agents can use flitz?</h3>
           <p>
@@ -51,7 +51,7 @@
             more than your role allows. Other clients, headless agents, scripts and CI send an API key from an admin instead, if they can
             set a request header. Every API operation is an MCP tool with the same scope, no tool deletes links, and you can disconnect an
             app at any time. See
-            <a href="%DOCS_URL%/mcp.md">Connect via MCP</a>.
+            <a href="./docs/ai-agents.html">Connect an AI agent</a>.
           </p>
         </section>
 

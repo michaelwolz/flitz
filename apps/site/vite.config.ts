@@ -11,7 +11,6 @@ const repo = "https://github.com/michaelwolz/flitz";
 const urls = {
   SITE_URL: "https://michaelwolz.github.io/flitz",
   REPO_URL: repo,
-  DOCS_URL: `${repo}/tree/main/apps/server/docs`,
   LICENSE_URL: "https://www.apache.org/licenses/LICENSE-2.0",
 };
 
@@ -31,13 +30,15 @@ export default defineConfig({
       transformIndexHtml: {
         order: "pre",
         handler: (html, { filename, server }) => {
-          const page = html.replace(/<!-- (head|header|footer) -->/g, (_, name) =>
-            readFileSync(file(`./partials/${name}.html`), "utf8").replace(
+          const docsPage = relative(file("./docs"), filename);
+          const current = !docsPage.startsWith("..") ? "Docs" : filename === file("./faq.html") ? "FAQ" : undefined;
+          const page = html.replace(/<!-- (head|header|footer) -->/g, (_, name) => {
+            const partial = readFileSync(file(`./partials/${name}.html`), "utf8").replace(
               /(src|href)="(\.\.?\/[^"]*)"/g,
               (_, attribute, path) => `${attribute}="${rebase(path, filename, Boolean(server))}"`,
-            ),
-          );
-          const docsPage = relative(file("./docs"), filename);
+            );
+            return name === "header" && current ? partial.replace(`>${current}</a>`, ` aria-current="page">${current}</a>`) : partial;
+          });
           if (docsPage.startsWith("..")) return page;
           const { head, body } = docsHtml(docsPage.replace(/\.html$/, ""));
           return page.replace("<!-- docs-head -->", head).replace("<!-- docs -->", body);

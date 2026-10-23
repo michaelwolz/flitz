@@ -22,5 +22,32 @@
 />
 <link rel="stylesheet" href="./src/site.css" />
 <script>
-  document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches);
+  (() => {
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    const system = () => (media.matches ? "dark" : "light");
+    let chosen = null;
+    try {
+      chosen = localStorage.getItem("theme");
+    } catch {}
+    const apply = () => {
+      const dark = (chosen ?? system()) === "dark";
+      document.documentElement.classList.toggle("dark", dark);
+      for (const button of document.querySelectorAll(".theme-toggle")) {
+        button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+      }
+    };
+    apply();
+    document.addEventListener("DOMContentLoaded", apply);
+    media.addEventListener("change", apply);
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".theme-toggle")) return;
+      const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
+      chosen = next === system() ? null : next;
+      try {
+        if (chosen) localStorage.setItem("theme", chosen);
+        else localStorage.removeItem("theme");
+      } catch {}
+      apply();
+    });
+  })();
 </script>

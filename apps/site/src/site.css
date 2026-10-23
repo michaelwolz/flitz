@@ -214,6 +214,37 @@ h3 {
 .header-link {
   font-weight: 600;
 }
+.site-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.theme-toggle .icon {
+  width: 18px;
+  height: 18px;
+}
+.icon-sun,
+.dark .icon-moon {
+  display: none;
+}
+.dark .icon-sun {
+  display: block;
+}
 
 .hero {
   display: flex;
@@ -397,6 +428,7 @@ h3 {
   padding: 24px;
 }
 .card-icon {
+  flex: none;
   display: grid;
   place-items: center;
   width: 40px;

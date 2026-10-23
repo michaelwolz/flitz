@@ -24,24 +24,24 @@ type LegalLinks = { imprint?: string; privacyPolicy?: string };
 
 export function notFoundPage(shortUrl: string, legal: LegalLinks) {
   return publicPage(
-    legal,
     "Short URL not found",
     "This short URL doesn't go anywhere",
     html`<p class="lead"><code translate="no">${shortUrl}</code> is not a link on this domain, or its link was deactivated.</p>
 <p>Check the address for typos. Capital letters don't matter, every other character does. If you scanned it from print, ask whoever printed it for the current address.</p>`,
+    legal,
   );
 }
 
 export function errorPage(legal: LegalLinks) {
   return publicPage(
-    legal,
     "Something went wrong",
     "Something went wrong",
     html`<p class="lead">flitz couldn't answer this request. Try again in a moment.</p>`,
+    legal,
   );
 }
 
-export function publicPage({ imprint, privacyPolicy }: LegalLinks, title: string, heading: string, body: Html) {
+function publicPage(title: string, heading: string, body: Html, { imprint, privacyPolicy }: LegalLinks) {
   return html`<!doctype html>
 <html lang="en">
 <head>
@@ -90,7 +90,7 @@ ${body}
 <footer>
 <a href="https://github.com/michaelwolz/flitz"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FF6B5B"/><g transform="translate(2 -1)" fill="none" stroke="#2E1065" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="10" d="M29.3 54 35.7 24C37.1 17.4 43.6 12 50.3 12M26 32H44"/><path stroke-width="6" d="M11 23h10M8 41h11"/></g></svg>
 Short URLs by flitz</a>
-<span>${imprint ? html`<a href="${imprint}">Imprint</a>` : ""}${privacyPolicy ? html`<a href="${privacyPolicy}">Privacy policy</a>` : ""}</span>
+<span>${imprint ? html`<a href="${imprint}" rel="noreferrer">Imprint</a>` : ""}${privacyPolicy ? html`<a href="${privacyPolicy}" rel="noreferrer">Privacy policy</a>` : ""}</span>
 </footer>
 </body>
 </html>`;

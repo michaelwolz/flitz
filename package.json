@@ -19,7 +19,7 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^11.0.1",
     "@types/node": "^24.0.0",
-    "conventional-changelog-conventionalcommits": "^10.4.1",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
     "lefthook": "^2.2.2",
     "oxfmt": "^0.73.0",
     "oxlint": "^1.88.0",

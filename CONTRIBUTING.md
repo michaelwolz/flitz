@@ -40,4 +40,4 @@ Every commit message follows [Conventional Commits](https://www.conventionalcomm
 
 ## Releases
 
-Releases are automatic via semantic-release (see `.releaserc.json`): after CI passes on `main`, `fix` commits release a patch, `feat` a minor and breaking changes a major version. Other types release nothing.
+Releases are automatic via semantic-release (see `.releaserc.json`): after CI passes on `main`, `fix` commits release a patch, `feat` a minor and breaking changes a major version. Other types release nothing. The release workflow creates a draft GitHub release, publishes the image and chart, then publishes the release. If artifact publishing fails after a tag is created, run the Release workflow manually with that version (without the `v` prefix) to resume from its tag.

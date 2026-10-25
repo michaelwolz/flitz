@@ -42,6 +42,7 @@ jobs:
         with:
           runtime: node@24
           install: false
+      - run: bash scripts/test-release-request.sh
       - run: pnpm install --frozen-lockfile --filter flitz
       - run: pnpm lint
       - run: pnpm format:check

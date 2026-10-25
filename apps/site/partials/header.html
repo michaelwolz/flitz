@@ -5,12 +5,6 @@
       <img src="../../docs/brand/flitz-qr-centre.svg" alt="" width="36" height="36" />
       <img src="../../docs/brand/flitz-wordmark-light.svg" alt="" width="53" height="24" />
     </a>
-    <nav class="site-nav" aria-label="Site">
-      <a href="./docs/">Docs</a>
-      <a href="./faq.html">FAQ</a>
-      <a href="%REPO_URL%" class="header-link">Source code</a>
-      <a href="./docs/self-hosting.html" class="btn btn-violet">Self-hosting guide</a>
-    </nav>
     <button type="button" class="theme-toggle" aria-label="Switch to dark theme">
       <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
       <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
@@ -18,5 +12,15 @@
         <path d="M12 2v2M12 20v2m-7.07-17.07 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
       </svg>
     </button>
+    <button type="button" class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav">
+      <svg class="icon icon-menu" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+      <svg class="icon icon-close" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>
+    </button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+      <a href="./docs/">Docs</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="%REPO_URL%" class="header-link">Source code</a>
+      <a href="./docs/self-hosting.html" class="btn btn-violet">Self-hosting guide</a>
+    </nav>
   </header>
 </div>

@@ -22,6 +22,7 @@
 />
 <link rel="stylesheet" href="./src/site.css" />
 <script>
+  document.documentElement.classList.add("js");
   (() => {
     const media = matchMedia("(prefers-color-scheme: dark)");
     const system = () => (media.matches ? "dark" : "light");
@@ -47,6 +48,36 @@
     });
     media.addEventListener("change", apply);
     document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const menuButton = target.closest(".menu-toggle");
+      if (menuButton) {
+        const header = menuButton.closest(".site-header");
+        if (!header) return;
+        const open = menuButton.getAttribute("aria-expanded") !== "true";
+        header.classList.toggle("menu-open", open);
+        menuButton.setAttribute("aria-expanded", String(open));
+        menuButton.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+        return;
+      }
+      if (target.closest(".site-nav a")) {
+        const header = target.closest(".site-header");
+        if (header) {
+          header.classList.remove("menu-open");
+          const button = header.querySelector(".menu-toggle");
+          button?.setAttribute("aria-expanded", "false");
+          button?.setAttribute("aria-label", "Open navigation");
+        }
+        return;
+      }
+      if (!target.closest(".site-header")) {
+        document.querySelectorAll(".site-header.menu-open").forEach((header) => {
+          header.classList.remove("menu-open");
+          const button = header.querySelector(".menu-toggle");
+          button?.setAttribute("aria-expanded", "false");
+          button?.setAttribute("aria-label", "Open navigation");
+        });
+      }
       if (!event.target.closest(".theme-toggle")) return;
       const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
       chosen = next === system() ? null : next;
@@ -55,6 +86,16 @@
         else localStorage.removeItem("theme");
       } catch {}
       apply();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      const header = document.querySelector(".site-header.menu-open");
+      if (!header) return;
+      header.classList.remove("menu-open");
+      const button = header.querySelector(".menu-toggle");
+      button?.setAttribute("aria-expanded", "false");
+      button?.setAttribute("aria-label", "Open navigation");
+      button?.focus();
     });
   })();
 </script>

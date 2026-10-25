@@ -872,6 +872,9 @@ pre {
 .prose td:first-child {
   white-space: nowrap;
 }
+.prose td code {
+  white-space: nowrap;
+}
 .prose tr:last-child td {
   border-bottom: 0;
 }

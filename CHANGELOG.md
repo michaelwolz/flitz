@@ -1,3 +1,10 @@
+## [0.2.0](https://github.com/michaelwolz/flitz/compare/v0.1.0...v0.2.0) (2026-10-26)
+
+### Features
+
+* **auth:** add Microsoft single sign-on ([8a00666](https://github.com/michaelwolz/flitz/commit/8a006660b5268dcfb0ed6888c9ae3ac7ce9dc8a1))
+* **server:** brand system emails ([d24decc](https://github.com/michaelwolz/flitz/commit/d24deccf2ed8ce02be073c6719593fe51899a793))
+
 ## [0.1.0](https://github.com/michaelwolz/flitz/compare/v0.0.0...v0.1.0) (2026-10-25)
 
 ### Features

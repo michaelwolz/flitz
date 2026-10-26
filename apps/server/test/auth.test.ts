@@ -237,7 +237,48 @@ test("off localhost without SMTP_URL, emails are not logged, only a warning with
 });
 
 test("the social providers endpoint lists only the providers the instance has configured", async () => {
-  const github = await instance({ ...env, GITHUB_CLIENT_ID: "github-client", GITHUB_CLIENT_SECRET: "github-secret" });
+  const disabled = await open.app.request("/api/auth/sign-in/social", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+    body: JSON.stringify({ provider: "microsoft", callbackURL: "http://localhost:3000/app" }),
+  });
+  expect(disabled.status).toBe(404);
   expect(await (await open.app.request("/api/social-providers")).json()).toEqual([]);
-  expect(await (await github.request("/api/social-providers")).json()).toEqual(["github"]);
+
+  async function authorization(app: App) {
+    const response = await app.request("/api/auth/sign-in/social", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+      body: JSON.stringify({
+        provider: "microsoft",
+        callbackURL: "http://localhost:3000/app",
+        errorCallbackURL: "http://localhost:3000/app/sign-in",
+      }),
+    });
+    expect(response.status).toBe(200);
+    return new URL((await response.json()).url);
+  }
+
+  const singleTenant = await instance({
+    ...env,
+    MICROSOFT_CLIENT_ID: "microsoft-client",
+    MICROSOFT_CLIENT_SECRET: "microsoft-secret",
+    MICROSOFT_TENANT_ID: "tenant-id",
+  });
+  expect(await (await singleTenant.request("/api/social-providers")).json()).toEqual(["microsoft"]);
+  const singleTenantUrl = await authorization(singleTenant);
+  expect(singleTenantUrl.origin + singleTenantUrl.pathname).toBe("https://login.microsoftonline.com/tenant-id/oauth2/v2.0/authorize");
+  expect(singleTenantUrl.searchParams.get("client_id")).toBe("microsoft-client");
+  expect(singleTenantUrl.searchParams.get("redirect_uri")).toBe("http://localhost:3000/api/auth/callback/microsoft");
+
+  const commonTenant = await instance({
+    ...env,
+    GITHUB_CLIENT_ID: "github-client",
+    GITHUB_CLIENT_SECRET: "github-secret",
+    MICROSOFT_CLIENT_ID: "microsoft-client",
+    MICROSOFT_CLIENT_SECRET: "microsoft-secret",
+  });
+  expect(await (await commonTenant.request("/api/social-providers")).json()).toEqual(["github", "microsoft"]);
+  const commonTenantUrl = await authorization(commonTenant);
+  expect(commonTenantUrl.pathname).toBe("/common/oauth2/v2.0/authorize");
 });

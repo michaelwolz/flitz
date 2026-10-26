@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useLoaderData, useSearchParams } from "react-router";
 import { PageHeader } from "@/components/page-header";
+import { SocialProviderIcon } from "@/components/social-provider-icon";
 import { SubmitButton } from "@/components/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,6 +87,7 @@ export function Account() {
                         pendingLabel={t("account.connecting")}
                         onClick={() => connect(provider)}
                       >
+                        <SocialProviderIcon provider={provider} />
                         {t("account.connect", { provider: labels[provider] })}
                       </SubmitButton>
                     )}

@@ -38,6 +38,7 @@
     "password": "Password",
     "notAllowed": "Sign-up on this instance needs an invitation. Ask an admin of this flitz instance to invite you.",
     "notVerified": "Your sign-in provider hasn't verified this email address, so flitz can't let you in with it. Verify the address with the provider, or use your email instead.",
+    "accountNotLinked": "This social account isn't connected to your flitz account. Sign in to flitz with your email, then connect it in Account settings.",
     "failed": "Signing in with that account didn't work. Try again, or use your email."
   },
   "signIn": {
@@ -392,6 +393,24 @@
     "save": "Save settings",
     "saving": "Saving…",
     "saved": "Settings saved"
+  },
+  "account": {
+    "title": "Account",
+    "socialAccounts": "Social accounts",
+    "lead": "Connect a social account to sign in to this flitz instance. It must use the same email address as your flitz account.",
+    "noProviders": "No social sign-in providers are configured for this flitz instance.",
+    "connected": "Connected",
+    "connect": "Connect {{provider}}",
+    "connecting": "Connecting…",
+    "linked": "{{provider}} connected to your flitz account.",
+    "linkFailed": "Couldn't connect this account. Try again or contact an admin of this flitz instance.",
+    "emailMismatch": "This provider uses a different email address. Use the email address on your flitz account.",
+    "alreadyLinked": "This provider account is already connected to another flitz account.",
+    "providers": {
+      "google": "Google",
+      "github": "GitHub",
+      "microsoft": "Microsoft"
+    }
   },
   "domains": {
     "title": "Domains",

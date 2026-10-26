@@ -66,6 +66,10 @@ export const router = createBrowserRouter(
               lazy: () => import("./routes/stats.tsx").then((m) => ({ Component: m.InstanceStats, loader: m.instanceStatsLoader })),
             },
             {
+              path: "settings/account",
+              lazy: () => import("./routes/account.tsx").then((m) => ({ Component: m.Account, loader: m.accountLoader })),
+            },
+            {
               path: "settings/domains",
               lazy: () => import("./routes/domains.tsx").then((m) => ({ Component: m.Domains, loader: m.domainsLoader })),
             },

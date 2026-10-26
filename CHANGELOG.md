@@ -1,3 +1,13 @@
+## [0.4.0](https://github.com/michaelwolz/flitz/compare/v0.3.0...v0.4.0) (2026-10-26)
+
+### Features
+
+* **auth:** add explicit account linking ([4c66cbd](https://github.com/michaelwolz/flitz/commit/4c66cbd4384ad0d59c69a298da7b0ee856b2d240))
+
+### Bug Fixes
+
+* **web:** show all social sign-in icons ([64ec27a](https://github.com/michaelwolz/flitz/commit/64ec27aee02a73a52b15a77ea1c3a260242fdcf1))
+
 ## [0.3.0](https://github.com/michaelwolz/flitz/compare/v0.2.0...v0.3.0) (2026-10-26)
 
 ### Features

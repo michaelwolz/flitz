@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/michaelwolz/flitz/compare/v0.2.0...v0.3.0) (2026-10-26)
+
+### Features
+
+* **auth:** allow disabling password authentication ([0f0c7fe](https://github.com/michaelwolz/flitz/commit/0f0c7fe74f8b68e755e77aa25a73163129fa993b))
+
 ## [0.2.0](https://github.com/michaelwolz/flitz/compare/v0.1.0...v0.2.0) (2026-10-26)
 
 ### Features

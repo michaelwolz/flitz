@@ -1,3 +1,9 @@
+## [0.4.1](https://github.com/michaelwolz/flitz/compare/v0.4.0...v0.4.1) (2026-10-26)
+
+### Bug Fixes
+
+* **web:** prevent domain overlap in slug field ([1513fd8](https://github.com/michaelwolz/flitz/commit/1513fd8b054c7080e51662a6fe50e9a5336acba9))
+
 ## [0.4.0](https://github.com/michaelwolz/flitz/compare/v0.3.0...v0.4.0) (2026-10-26)
 
 ### Features

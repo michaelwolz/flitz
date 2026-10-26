@@ -207,7 +207,7 @@ function Editor({ link: loaded, domains }: Awaited<ReturnType<typeof editorLoade
                   <FieldLabel htmlFor="slug">{t("editor.slug")}</FieldLabel>
                   <InputGroup className="overflow-hidden">
                     <InputGroupAddon className="max-w-1/2 self-stretch border-r border-input bg-muted pr-3 font-mono font-normal">
-                      <InputGroupText>
+                      <InputGroupText className="min-w-0">
                         <span translate="no" className="min-w-0 truncate">
                           {host}/
                         </span>

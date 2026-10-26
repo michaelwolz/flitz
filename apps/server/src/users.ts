@@ -3,7 +3,8 @@ import { z } from "@hono/zod-openapi";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { apiError, handleApiError, invalidRequest } from "./api.ts";
-import { type Auth, type Mailer, maxNameLength, paragraphs, plain } from "./auth.ts";
+import { type Auth, type Mailer, maxNameLength, plain } from "./auth.ts";
+import { systemEmail } from "./email.ts";
 import { type Role, roles, scopesOf } from "./scopes.ts";
 
 export type UserRow = { id: string; name: string; email: string; role: Role; emailVerified: boolean; createdAt: string; locked: boolean };
@@ -123,12 +124,17 @@ export function userRoutes(db: Db, auth: Auth, baseUrl: string, adminEmails: str
         sendEmail(
           email,
           `You're invited to flitz on ${host}`,
-          paragraphs(
-            `${sender} invited you to flitz on ${host}, with the role ${role}. Create your account with this email address here:`,
-            `${baseUrl}/app/sign-up?email=${encodeURIComponent(email)}`,
-            `You get this email because ${name} entered your address. The invitation works for ${invitationHours} hours.`,
-            `If you don't know ${name} or didn't expect this invitation, ignore this email. Nothing happens unless you sign up.`,
-          ),
+          systemEmail({
+            heading: "You're invited to flitz",
+            intro: `${sender} invited you to flitz on ${host}, with the role ${role}. Create your account using ${email}.`,
+            actionLabel: "Create account",
+            actionUrl: `${baseUrl}/app/sign-up?email=${encodeURIComponent(email)}`,
+            details: [
+              `You get this email because ${name} entered your address. The invitation works for ${invitationHours} hours.`,
+              `If you don't know ${name} or didn't expect this invitation, ignore this email. Nothing happens unless you sign up.`,
+            ],
+            host,
+          }),
         );
         return c.json(toInvitationRow(invitation), 201);
       },

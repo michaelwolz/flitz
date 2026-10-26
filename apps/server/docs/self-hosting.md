@@ -102,6 +102,8 @@ The pods run as a non-root user with a read-only root filesystem. Kubernetes che
 | `IMPRINT_URL`                              | no              | An `http` or `https` URL of your imprint (legal notice). The 404 and error pages that visitors of short URLs see link to it in their footer.                                                                                                                                                                                                             |
 | `PRIVACY_POLICY_URL`                       | no              | An `http` or `https` URL of your privacy policy. The 404 and error pages link to it in their footer.                                                                                                                                                                                                                                                     |
 
+flitz system emails include a plain-text alternative and embed the lockup without loading remote images.
+
 Admins change the time zone stats are counted in (default `UTC`), the retention period of clicks (default 13 months) and the App Store provider token on the Settings page of the web app, or with the `updateSettings` API operation. They are stored in Postgres, not in the environment.
 
 ## Users and sign-up

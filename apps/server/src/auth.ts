@@ -28,6 +28,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { jwt, magicLink } from "better-auth/plugins";
 import nodemailer from "nodemailer";
+import { fileURLToPath } from "node:url";
+import { type SystemEmail, systemEmail } from "./email.ts";
 import { lowercaseList, required } from "./env.ts";
 import type { RateLimits } from "./rate-limits.ts";
 import { clientIpHeader } from "./redirect-rules.ts";
@@ -64,8 +66,6 @@ export function plain(name: string) {
   const clean = name.replace(/[\s\p{C}]+/gu, " ").trim();
   return /[a-z][\w+.-]*:\/\/|www\.|\b[a-z0-9-]+\.[a-z]{2,}\b/i.test(clean) ? "" : clean;
 }
-
-export const paragraphs = (...lines: string[]) => lines.join("\n\n");
 
 export function createAuth(
   db: Db,
@@ -149,12 +149,17 @@ export function createAuth(
         sendEmail(
           user.email,
           "Reset your flitz password",
-          paragraphs(
-            `Set a new password for your flitz account on ${host}:`,
-            `${baseURL}/app/reset-password?token=${token}`,
-            "You get this email because someone asked to reset the password for this address. The link works once, for 1 hour. A new password signs you out everywhere and disconnects the apps you connected via MCP.",
-            "If you didn't ask for this, ignore this email. Your password stays as it is.",
-          ),
+          systemEmail({
+            heading: "Reset your password",
+            intro: `Set a new password for your flitz account on ${host}.`,
+            actionLabel: "Reset password",
+            actionUrl: `${baseURL}/app/reset-password?token=${token}`,
+            details: [
+              "You get this email because someone asked to reset the password for this address. The link works once, for 1 hour. A new password signs you out everywhere and disconnects the apps you connected via MCP.",
+              "If you didn't ask for this, ignore this email. Your password stays as it is.",
+            ],
+            host,
+          }),
         ),
       onPasswordReset: ({ user }) => revokeOAuthGrants(user.id),
       onExistingUserSignUp: async ({ user }, request) => {
@@ -171,12 +176,17 @@ export function createAuth(
         sendEmail(
           user.email,
           "Verify your email for flitz",
-          paragraphs(
-            `Confirm your email address for flitz on ${host}:`,
-            url,
-            `You get this email because an account on ${host} uses this address. The link confirms that the address is yours and signs you in. It works for 1 hour.`,
-            "If you didn't create this account, ignore this email.",
-          ),
+          systemEmail({
+            heading: "Verify your email",
+            intro: `Confirm your email address for flitz on ${host}.`,
+            actionLabel: "Verify email",
+            actionUrl: url,
+            details: [
+              `You get this email because an account on ${host} uses this address. The link confirms that the address is yours and signs you in. It works for 1 hour.`,
+              "If you didn't create this account, ignore this email.",
+            ],
+            host,
+          }),
         ),
       autoSignInAfterVerification: true,
     },
@@ -241,12 +251,17 @@ export function createAuth(
           sendEmail(
             email,
             "Sign in to flitz",
-            paragraphs(
-              `Sign in to flitz on ${host}:`,
-              url,
-              "You get this email because someone asked for a sign-in link for this address. The link works once, for 5 minutes.",
-              "If you didn't ask for this, ignore this email. Nobody can sign in without the link.",
-            ),
+            systemEmail({
+              heading: "Sign in to flitz",
+              intro: `Sign in to flitz on ${host}.`,
+              actionLabel: "Sign in",
+              actionUrl: url,
+              details: [
+                "You get this email because someone asked for a sign-in link for this address. The link works once, for 5 minutes.",
+                "If you didn't ask for this, ignore this email. Nobody can sign in without the link.",
+              ],
+              host,
+            }),
           ),
       }),
       jwt({ disableSettingJwtHeader: true }),
@@ -268,14 +283,23 @@ export type Mailer = ReturnType<typeof createMailer>;
 export function createMailer(env: NodeJS.ProcessEnv) {
   const local = isLoopback(required(env, "BASE_URL"));
   if (!env.SMTP_URL) {
-    return (to: string, subject: string, text: string) =>
+    return (to: string, subject: string, message: SystemEmail) =>
       local
-        ? console.log(`Email to ${to}: ${subject}\n${text}`)
+        ? console.log(`Email to ${to}: ${subject}\n${message.text}`)
         : console.warn(`SMTP_URL is not set, so flitz did not send the email "${subject}" to ${to}.`);
   }
   const from = required(env, "SMTP_FROM");
   const transport = nodemailer.createTransport(env.SMTP_URL);
-  return (to: string, subject: string, text: string) => {
-    transport.sendMail({ from, to, subject, text }).catch((error) => console.error(`Email to ${to} failed:`, error));
+  const logo = fileURLToPath(new URL("../../../docs/brand/flitz-lockup-light.png", import.meta.url));
+  return (to: string, subject: string, message: SystemEmail) => {
+    transport
+      .sendMail({
+        from,
+        to,
+        subject,
+        ...message,
+        attachments: [{ filename: "flitz-lockup-light.png", path: logo, cid: "flitz-lockup-light" }],
+      })
+      .catch((error) => console.error(`Email to ${to} failed:`, error));
   };
 }

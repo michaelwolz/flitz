@@ -75,6 +75,10 @@ export function createAuth(
   adminEmails: string[],
   fetchClientMetadata = fetchClientMetadataResource,
 ) {
+  if (env.DISABLE_PASSWORD_AUTH && !["true", "false"].includes(env.DISABLE_PASSWORD_AUTH)) {
+    throw new Error("DISABLE_PASSWORD_AUTH must be true or false");
+  }
+  const passwordEnabled = env.DISABLE_PASSWORD_AUTH !== "true";
   const baseURL = required(env, "BASE_URL");
   const host = new URL(baseURL).host;
   const signUpDomains = lowercaseList(env, "SIGNUP_DOMAINS");
@@ -138,10 +142,13 @@ export function createAuth(
     advanced: { database: { generateId: "uuid" }, ipAddress: { ipAddressHeaders: [clientIpHeader] } },
     rateLimit: { enabled: true, customStorage: authRateLimit },
     onAPIError: { customizeDefaultErrorPage: {} },
-    disabledPaths: ["/oauth2/delete-consent"],
+    disabledPaths: [
+      "/oauth2/delete-consent",
+      ...(!passwordEnabled ? ["/request-password-reset", "/reset-password", "/change-password", "/set-password"] : []),
+    ],
     user: { additionalFields: { role: { type: "string", input: false, defaultValue: "member" } } },
     emailAndPassword: {
-      enabled: true,
+      enabled: passwordEnabled,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
       resetPasswordTokenExpiresIn: 3600,

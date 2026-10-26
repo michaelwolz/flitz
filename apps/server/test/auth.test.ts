@@ -279,6 +279,31 @@ test("the social providers endpoint lists only the providers the instance has co
     MICROSOFT_CLIENT_SECRET: "microsoft-secret",
   });
   expect(await (await commonTenant.request("/api/social-providers")).json()).toEqual(["github", "microsoft"]);
+  expect(await (await commonTenant.request("/api/auth-methods")).json()).toEqual({
+    password: true,
+    socialProviders: ["github", "microsoft"],
+  });
   const commonTenantUrl = await authorization(commonTenant);
   expect(commonTenantUrl.pathname).toBe("/common/oauth2/v2.0/authorize");
+});
+
+test("password auth can be disabled while existing accounts and magic-link sign-up still work", async () => {
+  const existing = await verifiedUser(open.app, "password-disabled@example.com");
+  const app = await instance({ ...env, DISABLE_PASSWORD_AUTH: "true" });
+  expect(await (await open.app.request("/api/auth-methods")).json()).toEqual({ password: true, socialProviders: [] });
+  expect(await (await app.request("/api/auth-methods")).json()).toEqual({ password: false, socialProviders: [] });
+  expect((await signIn(app, "password-disabled@example.com")).status).toBe(400);
+  expect((await signUp(app, "disabled-signup@example.com")).status).toBe(400);
+  for (const path of ["request-password-reset", "reset-password", "change-password", "set-password"]) {
+    expect((await app.request(`/api/auth/${path}`, { method: "POST" })).status).toBe(404);
+  }
+  expect((await call(app, { cookie: existing.cookie }, "GET", "/api/users")).status).toBe(200);
+  for (const email of ["password-disabled@example.com", "new-magic-only@example.com"]) {
+    expect((await call(app, {}, "POST", "/api/auth/sign-in/magic-link", { email })).status).toBe(200);
+    const signedIn = await openEmailLink(app, email, "Sign in");
+    expect(cookieOf(signedIn)).toContain("better-auth.session_token");
+    expect((await call(app, { cookie: cookieOf(signedIn) }, "GET", "/api/users")).status).toBe(200);
+  }
+  const enabled = await instance({ ...env, DISABLE_PASSWORD_AUTH: "false" });
+  expect((await signIn(enabled, "password-disabled@example.com")).status).toBe(200);
 });

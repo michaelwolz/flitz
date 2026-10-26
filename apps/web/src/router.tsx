@@ -39,8 +39,8 @@ export const router = createBrowserRouter(
       children: [
         { path: "/sign-in", element: <SignIn />, loader: guestLoader },
         { path: "/sign-up", element: <SignUp />, loader: guestLoader },
-        { path: "/forgot-password", element: <ForgotPassword /> },
-        { path: "/reset-password", element: <ResetPassword /> },
+        { path: "/forgot-password", element: <ForgotPassword />, loader: guestLoader },
+        { path: "/reset-password", element: <ResetPassword />, loader: guestLoader },
       ],
     },
     {

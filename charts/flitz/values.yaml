@@ -45,6 +45,8 @@ config:
   SIGNUP_DOMAINS: ""
   # The role of people who sign up through SIGNUP_DOMAINS: admin, member or viewer. flitz defaults to member.
   DEFAULT_ROLE: ""
+  # Set to "true" to disable password sign-in and sign-up. Magic links and social sign-in stay available.
+  DISABLE_PASSWORD_AUTH: ""
   # The sender address for emails, such as "flitz <links@example.com>". Required with SMTP_URL.
   SMTP_FROM: ""
   GOOGLE_CLIENT_ID: ""

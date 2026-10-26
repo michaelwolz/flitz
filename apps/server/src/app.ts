@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 import { Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { type ApiEnv, authorizer, handleApiError, sameOriginOnly, validationHook } from "./api.ts";
@@ -25,6 +25,9 @@ import { type LookupLocation, locationLookup, redirect, requestFacts, trustedCli
 import { settingsRoutes } from "./settings.ts";
 import { statsRoutes } from "./stats.ts";
 import { userRoutes } from "./users.ts";
+
+const AuthMethods = z.object({ password: z.boolean(), socialProviders: z.array(z.enum(["google", "github", "microsoft"])) });
+export type AuthMethods = z.infer<typeof AuthMethods>;
 
 const webApp = fileURLToPath(new URL("../../web/dist", import.meta.url));
 
@@ -110,6 +113,12 @@ export async function createApp(
   app.get("/.well-known/*", (c) => auth.handler(c.req.raw));
   app.route(consentPage, consentRoutes(db, auth));
   app.get("/api/social-providers", (c) => c.json(Object.keys(auth.options.socialProviders)));
+  app.get("/api/auth-methods", (c) =>
+    c.json({
+      password: auth.options.emailAndPassword.enabled,
+      socialProviders: Object.keys(auth.options.socialProviders) as AuthMethods["socialProviders"],
+    } satisfies AuthMethods),
+  );
   app.all("/api/mcp", mcpEndpoint(routes, api.request, access, new URL("/.well-known/oauth-protected-resource/api/mcp", baseUrl).href));
   app.route("/api/connected-apps", connectedAppRoutes(db, sessionUser));
   app.route("/api/links", linkDeletionRoutes(db, sessionUser));

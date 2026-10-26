@@ -10,6 +10,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router";
+import type { AuthMethods } from "../../../server/src/app.ts";
 import lockupDark from "../../../../docs/brand/flitz-lockup-dark.svg";
 import lockupLight from "../../../../docs/brand/flitz-lockup-light.svg";
 import { SubmitButton } from "@/components/submit-button";
@@ -21,11 +22,12 @@ import { api, appUrl, auth, authClient, safeNext, useAction } from "@/lib/api";
 import { textLink } from "@/lib/utils";
 
 export async function guestLoader({ request }: LoaderFunctionArgs) {
-  const [{ data }, providers] = await Promise.all([
-    authClient.getSession(),
-    api<("google" | "github" | "microsoft")[]>("/social-providers").catch(() => []),
-  ]);
-  if (data) throw redirect(safeNext(new URL(request.url).searchParams.get("next")));
+  const [{ data }, providers] = await Promise.all([authClient.getSession(), api<AuthMethods>("/auth-methods")]);
+  const url = new URL(request.url);
+  if (data && ["/app/sign-in", "/app/sign-up"].includes(url.pathname)) throw redirect(safeNext(url.searchParams.get("next")));
+  if (!providers.password && url.pathname !== "/app/sign-in") {
+    throw redirect(`/sign-in${url.search}`);
+  }
   return providers;
 }
 
@@ -134,7 +136,7 @@ function GithubIcon() {
 
 function SocialSignIn() {
   const { t } = useTranslation();
-  const providers = useLoaderData<typeof guestLoader>();
+  const { socialProviders: providers } = useLoaderData<typeof guestLoader>();
   const { pathname, search } = useLocation();
   const next = useNext();
   const social = useAction();
@@ -186,6 +188,7 @@ function SocialSignIn() {
 export function SignIn() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { password: passwordEnabled } = useLoaderData<typeof guestLoader>();
   const { search } = useLocation();
   const next = useNext();
   const urlError = useUrlError();
@@ -196,6 +199,10 @@ export function SignIn() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!passwordEnabled) {
+      sendLink();
+      return;
+    }
     const form = new FormData(event.currentTarget);
     signIn.run(async () => {
       const data = await auth(authClient.signIn.email({ email: String(form.get("email")), password: String(form.get("password")) }), {
@@ -222,24 +229,28 @@ export function SignIn() {
           <FieldLabel htmlFor="email">{t("auth.email")}</FieldLabel>
           <Input ref={email} id="email" name="email" type="email" autoComplete="email" required />
         </Field>
-        <Field>
-          <div className="flex items-baseline justify-between gap-3">
-            <FieldLabel htmlFor="password">{t("auth.password")}</FieldLabel>
-            <RouterLink to={`/forgot-password${search}`} className={`text-small ${textLink}`}>
-              {t("forgotPassword.link")}
-            </RouterLink>
-          </div>
-          <Input id="password" name="password" type="password" autoComplete="current-password" required />
-        </Field>
+        {passwordEnabled && (
+          <>
+            <Field>
+              <div className="flex items-baseline justify-between gap-3">
+                <FieldLabel htmlFor="password">{t("auth.password")}</FieldLabel>
+                <RouterLink to={`/forgot-password${search}`} className={`text-small ${textLink}`}>
+                  {t("forgotPassword.link")}
+                </RouterLink>
+              </div>
+              <Input id="password" name="password" type="password" autoComplete="current-password" required />
+            </Field>
+            <SubmitButton size="lg" pending={signIn.pending} pendingLabel={t("signIn.pending")}>
+              {t("signIn.submit")}
+            </SubmitButton>
+          </>
+        )}
         <FieldError>{signIn.error ?? magicLink.error ?? urlError}</FieldError>
-        <SubmitButton size="lg" pending={signIn.pending} pendingLabel={t("signIn.pending")}>
-          {t("signIn.submit")}
-        </SubmitButton>
         <SubmitButton
-          type="button"
-          variant="secondary"
+          type={passwordEnabled ? "button" : "submit"}
+          variant={passwordEnabled ? "secondary" : "default"}
           size="lg"
-          onClick={sendLink}
+          onClick={passwordEnabled ? sendLink : undefined}
           pending={magicLink.pending}
           pendingLabel={t("signIn.sendingLink")}
         >
@@ -250,12 +261,14 @@ export function SignIn() {
           {sentTo && t("signIn.linkSent", { email: sentTo })}
         </p>
       </form>
-      <p className="text-muted-foreground">
-        {t("signIn.newHere")}{" "}
-        <RouterLink to={`/sign-up${search}`} className={textLink}>
-          {t("signIn.createAccount")}
-        </RouterLink>
-      </p>
+      {passwordEnabled && (
+        <p className="text-muted-foreground">
+          {t("signIn.newHere")}{" "}
+          <RouterLink to={`/sign-up${search}`} className={textLink}>
+            {t("signIn.createAccount")}
+          </RouterLink>
+        </p>
+      )}
     </AuthLayout>
   );
 }

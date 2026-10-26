@@ -197,6 +197,7 @@ export function createAuth(
         ),
       autoSignInAfterVerification: true,
     },
+    account: { accountLinking: { trustedProviders: ["microsoft"], disableImplicitLinking: true } },
     socialProviders: {
       ...(env.GOOGLE_CLIENT_ID
         ? {

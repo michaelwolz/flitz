@@ -1,4 +1,18 @@
-import { Bot, BookOpen, ChartLine, Globe, KeyRound, Link2, LogOut, type LucideIcon, Moon, Settings, Sun, Users } from "lucide-react";
+import {
+  Bot,
+  BookOpen,
+  ChartLine,
+  CircleUserRound,
+  Globe,
+  KeyRound,
+  Link2,
+  LogOut,
+  type LucideIcon,
+  Moon,
+  Settings,
+  Sun,
+  Users,
+} from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -57,6 +71,7 @@ export const useSetOwnName = () => useContext(OwnName);
 const navButton = "h-9 rounded-full px-3 data-[active=true]:font-semibold";
 
 const settingsNav = [
+  { to: "/settings/account", label: "account.title", icon: CircleUserRound, admin: false },
   { to: "/settings/domains", label: "domains.title", icon: Globe, admin: false },
   { to: "/settings/api-keys", label: "apiKeys.title", icon: KeyRound, admin: true },
   { to: "/settings/mcp", label: "mcp.title", icon: Bot, admin: false },

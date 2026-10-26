@@ -215,6 +215,23 @@ test("a user changes their own name", async ({ page }) => {
   await expect(page.getByRole("button", { name: /^Fran Allen frances@example\.com/ })).toBeVisible();
 });
 
+test("account settings explain when no social providers are configured and how to link one", async ({ page }) => {
+  const flitz = process.env.FLITZ_URL!;
+  await signUp(page, "Maya");
+
+  const nav = page.getByRole("navigation", { name: "Main" });
+  await nav.getByRole("link", { name: "Account" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Account" })).toBeVisible();
+  await expect(page.getByText("No social sign-in providers are configured for this flitz instance.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await page.goto(`${flitz}/app/sign-in?error=account_not_linked`);
+  await expect(page.getByRole("alert")).toHaveText(
+    "This social account isn't connected to your flitz account. Sign in to flitz with your email, then connect it in Account settings.",
+  );
+});
+
 test("create a link with a custom slug on the instance domain, follow it, then deactivate and delete it", async ({ page }) => {
   const flitz = process.env.FLITZ_URL!;
   await signUp(page, "Katherine");

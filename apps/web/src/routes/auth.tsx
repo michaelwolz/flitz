@@ -114,6 +114,7 @@ function useUrlError() {
   if (!error) return undefined;
   if (error === "SIGN_UP_NOT_ALLOWED") return t("auth.notAllowed");
   if (error === "email_not_verified") return t("auth.notVerified");
+  if (error === "account_not_linked") return t("auth.accountNotLinked");
   return t("auth.failed");
 }
 

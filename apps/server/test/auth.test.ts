@@ -27,6 +27,66 @@ async function instance(environment: Record<string, string | undefined>) {
   return created.app;
 }
 
+function microsoftIdToken(email: string, emailVerified: boolean) {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  return `${encode({ alg: "none", typ: "JWT" })}.${encode({ oid: `account-${email}`, email, email_verified: emailVerified, name: "Microsoft User" })}.test`;
+}
+
+async function microsoftOAuth(
+  app: App,
+  {
+    endpoint = "/api/auth/link-social",
+    cookie = "",
+    email,
+    emailVerified,
+  }: {
+    endpoint?: "/api/auth/link-social" | "/api/auth/sign-in/social";
+    cookie?: string;
+    email: string;
+    emailVerified: boolean;
+  },
+) {
+  const linking = endpoint === "/api/auth/link-social";
+  const callbackURL = linking ? "http://localhost:3000/app/settings/account?linked=microsoft" : "http://localhost:3000/app";
+  const errorCallbackURL = linking ? "http://localhost:3000/app/settings/account" : "http://localhost:3000/app/sign-in";
+  const originalFetch = globalThis.fetch;
+  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.pathname.endsWith("/token")) {
+      return Response.json({
+        access_token: "microsoft-access-token",
+        refresh_token: "microsoft-refresh-token",
+        token_type: "Bearer",
+        expires_in: 3600,
+        scope: "openid profile email User.Read offline_access",
+        id_token: microsoftIdToken(email, emailVerified),
+      });
+    }
+    if (url.hostname === "graph.microsoft.com") return new Response(null, { status: 404 });
+    if (url.hostname === "localhost") return originalFetch(input, init);
+    throw new Error(`Unexpected OAuth request to ${url.origin}`);
+  });
+  try {
+    const start = await app.request(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "http://localhost:3000", ...newClient(), ...(cookie && { cookie }) },
+      body: JSON.stringify({ provider: "microsoft", callbackURL, errorCallbackURL }),
+    });
+    expect(start.status).toBe(200);
+    const authorization = new URL((await start.json()).url);
+    const cookies = [cookie, cookieOf(start)].filter(Boolean).join("; ");
+    const callback = await app.request(
+      `/api/auth/callback/microsoft?${new URLSearchParams({ code: "test-code", state: authorization.searchParams.get("state") ?? "" })}`,
+      {
+        headers: cookies ? { cookie: cookies } : {},
+      },
+    );
+    return callback;
+  } finally {
+    vi.unstubAllGlobals();
+  }
+}
+
 function signIn(app: App, email: string, attempt = password, client = newClient()) {
   return app.request("/api/auth/sign-in/email", {
     method: "POST",
@@ -285,6 +345,80 @@ test("the social providers endpoint lists only the providers the instance has co
   });
   const commonTenantUrl = await authorization(commonTenant);
   expect(commonTenantUrl.pathname).toBe("/common/oauth2/v2.0/authorize");
+});
+
+test("a verified user can explicitly connect Microsoft with an unverified matching email", async () => {
+  const app = await instance({ ...env, MICROSOFT_CLIENT_ID: "microsoft-client", MICROSOFT_CLIENT_SECRET: "microsoft-secret" });
+  const user = await verifiedUser(app, "microsoft-link@example.com");
+  const linked = await microsoftOAuth(app, { cookie: user.cookie, email: "microsoft-link@example.com", emailVerified: false });
+
+  expect(linked.status).toBe(302);
+  expect(linked.headers.get("location")).toBe("http://localhost:3000/app/settings/account?linked=microsoft");
+  const accounts = await call(app, { cookie: user.cookie }, "GET", "/api/auth/list-accounts");
+  expect(accounts.body.map(({ providerId }: { providerId: string }) => providerId)).toContain("microsoft");
+
+  const signedIn = await microsoftOAuth(app, {
+    endpoint: "/api/auth/sign-in/social",
+    email: "microsoft-link@example.com",
+    emailVerified: false,
+  });
+  expect(signedIn.status).toBe(302);
+  expect(signedIn.headers.get("location")).toBe("http://localhost:3000/app");
+  expect(cookieOf(signedIn)).toContain("session_token");
+});
+
+test("social account linking requires a session and matching email", async () => {
+  const app = await instance({ ...env, MICROSOFT_CLIENT_ID: "microsoft-client", MICROSOFT_CLIENT_SECRET: "microsoft-secret" });
+  const unauthenticated = await app.request("/api/auth/link-social", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+    body: JSON.stringify({ provider: "microsoft" }),
+  });
+  expect(unauthenticated.status).toBe(401);
+
+  const user = await verifiedUser(app, "microsoft-owner@example.com");
+  const mismatch = await microsoftOAuth(app, {
+    cookie: user.cookie,
+    email: "different@example.com",
+    emailVerified: true,
+  });
+  expect(mismatch.status).toBe(302);
+  expect(mismatch.headers.get("location")).toContain("error=email_does_not_match");
+  const accounts = await call(app, { cookie: user.cookie }, "GET", "/api/auth/list-accounts");
+  expect(accounts.body.map(({ providerId }: { providerId: string }) => providerId)).not.toContain("microsoft");
+});
+
+test("signed-out Microsoft sign-in can't attach itself to a matching existing account", async () => {
+  const app = await instance({ ...env, MICROSOFT_CLIENT_ID: "microsoft-client", MICROSOFT_CLIENT_SECRET: "microsoft-secret" });
+  const user = await verifiedUser(app, "microsoft-existing@example.com");
+  const signIn = await microsoftOAuth(app, {
+    endpoint: "/api/auth/sign-in/social",
+    email: "microsoft-existing@example.com",
+    emailVerified: true,
+  });
+
+  expect(signIn.status).toBe(302);
+  expect(signIn.headers.get("location")).toContain("error=account_not_linked");
+  expect(cookieOf(signIn)).not.toContain("session_token");
+  const accounts = await call(app, { cookie: user.cookie }, "GET", "/api/auth/list-accounts");
+  expect(accounts.body.map(({ providerId }: { providerId: string }) => providerId)).not.toContain("microsoft");
+});
+
+test("an unverified first-time Microsoft account must verify its email before it gets a session", async () => {
+  const app = await instance({ ...env, MICROSOFT_CLIENT_ID: "microsoft-client", MICROSOFT_CLIENT_SECRET: "microsoft-secret" });
+  const signIn = await microsoftOAuth(app, {
+    endpoint: "/api/auth/sign-in/social",
+    email: "microsoft-new@example.com",
+    emailVerified: false,
+  });
+
+  expect(signIn.status).toBe(302);
+  expect(signIn.headers.get("location")).toContain("error=email_not_verified");
+  expect(cookieOf(signIn)).not.toContain("session_token");
+  expect(lastEmailTo("microsoft-new@example.com", "Verify")).toContain("Verify");
+  const verified = await openEmailLink(app, "microsoft-new@example.com", "Verify");
+  expect(cookieOf(verified)).toContain("session_token");
+  expect((await roles(app, cookieOf(verified)))["microsoft-new@example.com"]).toBe("admin");
 });
 
 test("password auth can be disabled while existing accounts and magic-link sign-up still work", async () => {

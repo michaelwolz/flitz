@@ -29,6 +29,8 @@ secrets:
   GOOGLE_CLIENT_SECRET: ""
   # Turns on sign-in with GitHub together with config.GITHUB_CLIENT_ID.
   GITHUB_CLIENT_SECRET: ""
+  # Turns on sign-in with Microsoft together with config.MICROSOFT_CLIENT_ID.
+  MICROSOFT_CLIENT_SECRET: ""
 
 # The name of an existing Secret with the settings above, under keys named like them
 # (DATABASE_URL, REDIS_URL, AUTH_SECRET, ...). Its keys win over secrets.
@@ -47,6 +49,9 @@ config:
   SMTP_FROM: ""
   GOOGLE_CLIENT_ID: ""
   GITHUB_CLIENT_ID: ""
+  MICROSOFT_CLIENT_ID: ""
+  # Defaults to common; set a tenant ID or organizations/consumers to restrict Microsoft accounts.
+  MICROSOFT_TENANT_ID: ""
   # Requests to short URLs per client IP per minute. flitz defaults to 600.
   RATE_LIMIT_REDIRECTS_PER_MINUTE: ""
   # How many reverse proxies in front of flitz add to X-Forwarded-For; flitz takes the client IP from

@@ -191,6 +191,16 @@ export function createAuth(
             github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: required(env, "GITHUB_CLIENT_SECRET"), requireEmailVerification: true },
           }
         : {}),
+      ...(env.MICROSOFT_CLIENT_ID
+        ? {
+            microsoft: {
+              clientId: env.MICROSOFT_CLIENT_ID,
+              clientSecret: required(env, "MICROSOFT_CLIENT_SECRET"),
+              tenantId: env.MICROSOFT_TENANT_ID || "common",
+              requireEmailVerification: true,
+            },
+          }
+        : {}),
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {

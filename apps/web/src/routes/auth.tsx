@@ -23,7 +23,7 @@ import { textLink } from "@/lib/utils";
 export async function guestLoader({ request }: LoaderFunctionArgs) {
   const [{ data }, providers] = await Promise.all([
     authClient.getSession(),
-    api<("google" | "github")[]>("/social-providers").catch(() => []),
+    api<("google" | "github" | "microsoft")[]>("/social-providers").catch(() => []),
   ]);
   if (data) throw redirect(safeNext(new URL(request.url).searchParams.get("next")));
   return providers;
@@ -141,7 +141,7 @@ function SocialSignIn() {
   const [started, setStarted] = useState("");
   if (providers.length === 0) return null;
 
-  const labels = { google: t("socialSignIn.google"), github: t("socialSignIn.github") };
+  const labels = { google: t("socialSignIn.google"), github: t("socialSignIn.github"), microsoft: t("socialSignIn.microsoft") };
   function start(provider: (typeof providers)[number]) {
     setStarted(provider);
     social.run(() =>

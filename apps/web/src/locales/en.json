@@ -65,6 +65,7 @@
   "socialSignIn": {
     "google": "Continue with Google",
     "github": "Continue with GitHub",
+    "microsoft": "Continue with Microsoft",
     "redirecting": "Redirecting…",
     "orWithEmail": "or with email"
   },

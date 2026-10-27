@@ -1,3 +1,9 @@
+## [0.4.2](https://github.com/michaelwolz/flitz/compare/v0.4.1...v0.4.2) (2026-10-27)
+
+### Bug Fixes
+
+* **web:** point API docs links to published documentation ([05b55c9](https://github.com/michaelwolz/flitz/commit/05b55c90d0568a0e6a001c3f4dbb3b52f7fd4adb))
+
 ## [0.4.1](https://github.com/michaelwolz/flitz/compare/v0.4.0...v0.4.1) (2026-10-26)
 
 ### Bug Fixes

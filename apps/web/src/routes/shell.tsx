@@ -153,7 +153,7 @@ export function Shell() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild className={navButton}>
-                <a href="/docs">
+                <a href="https://michaelwolz.github.io/flitz/docs/">
                   <BookOpen aria-hidden="true" />
                   {t("shell.apiDocs")}
                 </a>

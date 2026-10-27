@@ -67,7 +67,7 @@ export function ApiKeys() {
         lead={
           <>
             {t("apiKeys.lead")}{" "}
-            <a href="/docs" className={textLink}>
+            <a href="https://michaelwolz.github.io/flitz/docs/api-quick-start.html#1-sign-up-and-create-an-api-key" className={textLink}>
               {t("apiKeys.docs")}
             </a>
           </>

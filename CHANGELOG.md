@@ -1,3 +1,9 @@
+## [0.5.0](https://github.com/michaelwolz/flitz/compare/v0.4.2...v0.5.0) (2026-10-28)
+
+### Features
+
+* **stats:** add UTM content and term breakdowns ([d78c06c](https://github.com/michaelwolz/flitz/commit/d78c06ccb590ab504405081028e6b995469afe0f))
+
 ## [0.4.2](https://github.com/michaelwolz/flitz/compare/v0.4.1...v0.4.2) (2026-10-27)
 
 ### Bug Fixes

@@ -22,6 +22,8 @@ Below the chart, flitz breaks the clicks down by country, device, operating syst
   <figcaption>Clicks by country and by device.</figcaption>
 </figure>
 
+The UTM breakdowns use `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` and `utm_term` from the short URL. Use `utm_content` to distinguish placements or variants within a campaign, such as `header_button` and `footer_link`, and `utm_term` for paid-search keywords. Parameters present only on the target URL do not appear in these breakdowns. You can filter by each UTM value, and the CSV export includes a column for each parameter.
+
 In stats, a phone counts as mobile and a tablet as a tablet, and Safari on an iPad counts as desktop because it presents itself as a Mac. Redirect rules see devices a bit differently, see [Conditions](links.html#conditions).
 
 ## Stats for all links

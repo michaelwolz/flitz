@@ -181,7 +181,9 @@
       "referrer": "Referrers",
       "utmSource": "UTM sources",
       "utmMedium": "UTM media",
-      "utmCampaign": "UTM campaigns"
+      "utmCampaign": "UTM campaigns",
+      "utmContent": "UTM content",
+      "utmTerm": "UTM terms"
     },
     "dimensions": {
       "country": "Country",
@@ -191,7 +193,9 @@
       "referrer": "Referrer",
       "utmSource": "UTM source",
       "utmMedium": "UTM medium",
-      "utmCampaign": "UTM campaign"
+      "utmCampaign": "UTM campaign",
+      "utmContent": "UTM content",
+      "utmTerm": "UTM term"
     },
     "deviceTypes": {
       "desktop": "Desktop",

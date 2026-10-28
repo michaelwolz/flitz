@@ -18,6 +18,8 @@ const dimensions = {
   utmSource: sql`${clicks.query}->>'utm_source'`,
   utmMedium: sql`${clicks.query}->>'utm_medium'`,
   utmCampaign: sql`${clicks.query}->>'utm_campaign'`,
+  utmContent: sql`${clicks.query}->>'utm_content'`,
+  utmTerm: sql`${clicks.query}->>'utm_term'`,
 };
 type Dimension = keyof typeof dimensions;
 const dimensionNames = Object.keys(dimensions) as [Dimension, ...Dimension[]];
@@ -187,6 +189,8 @@ export function statsRoutes(db: Db, baseUrl: string) {
       "utmSource",
       "utmMedium",
       "utmCampaign",
+      "utmContent",
+      "utmTerm",
       "query",
     ]);
     for (let after: typeof clicks.$inferSelect | undefined; ;) {
@@ -213,6 +217,8 @@ export function statsRoutes(db: Db, baseUrl: string) {
             click.query.utm_source,
             click.query.utm_medium,
             click.query.utm_campaign,
+            click.query.utm_content,
+            click.query.utm_term,
             new URLSearchParams(click.query).toString(),
           ]),
         )
@@ -280,7 +286,7 @@ export function statsRoutes(db: Db, baseUrl: string) {
             ...clickFields,
             by: z.union([breakdownName, z.array(breakdownName).min(1)]).meta({
               description:
-                "One property, or a list of them for several breakdowns in one call (in a query string, repeat it: `by=country&by=device`). `country` is a two-letter code like DE; `device` is the device type: `desktop`, `mobile` for phones, `tablet`, or another type such as `smarttv` (unlike in redirect rule conditions, `mobile` excludes tablets, and iOS and Android are values of `os`); `os` and `browser` are names like iOS or Chrome; `referrer` is the domain of the page the click came from; `utmSource`, `utmMedium` and `utmCampaign` are the `utm_source`, `utm_medium` and `utm_campaign` query parameters of the short URL; `link` is the link, to find the top links.",
+                "One property, or a list of them for several breakdowns in one call (in a query string, repeat it: `by=country&by=device`). `country` is a two-letter code like DE; `device` is the device type: `desktop`, `mobile` for phones, `tablet`, or another type such as `smarttv` (unlike in redirect rule conditions, `mobile` excludes tablets, and iOS and Android are values of `os`); `os` and `browser` are names like iOS or Chrome; `referrer` is the domain of the page the click came from; `utmSource`, `utmMedium`, `utmCampaign`, `utmContent` and `utmTerm` are the `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` and `utm_term` query parameters of the short URL; `link` is the link, to find the top links.",
             }),
             limit: limitParam.meta({ description: "The most values to return per breakdown, at most 100." }),
           }),

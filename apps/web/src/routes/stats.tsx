@@ -26,7 +26,18 @@ import { cn, countryName, displayUrl, linkName, titleLink } from "@/lib/utils";
 import type en from "@/locales/en.json";
 import { StatusBadge } from "./links.tsx";
 
-const dimensions = ["country", "device", "os", "browser", "referrer", "utmSource", "utmMedium", "utmCampaign"] as const;
+const dimensions = [
+  "country",
+  "device",
+  "os",
+  "browser",
+  "referrer",
+  "utmSource",
+  "utmMedium",
+  "utmCampaign",
+  "utmContent",
+  "utmTerm",
+] as const;
 type Dimension = (typeof dimensions)[number];
 const botModes = ["exclude", "include", "only"] as const;
 type BotMode = (typeof botModes)[number];

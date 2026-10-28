@@ -99,7 +99,7 @@ Every link has a QR code that encodes its short URL, never its target: `GET {{BA
 
 ### Stats
 
-`getClickTimeSeries` counts clicks and unique visitors per day or hour, `getClickBreakdown` counts clicks per country, device, OS, browser, referrer, `utm_source`, `utm_medium`, `utm_campaign` or link (the top links), several of them in one call if you send more than one `by`, and `exportClicks` returns the raw clicks as CSV. Each works for one link (`linkId`) or all links, covers a range of days (`from` and `to`, at most 400 days, or 31 days by hour) and filters by any breakdown value. Bot clicks are left out unless you send `bots=include` or `bots=only`.
+`getClickTimeSeries` counts clicks and unique visitors per day or hour, `getClickBreakdown` counts clicks per country, device, OS, browser, referrer, `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` or link (the top links), several of them in one call if you send more than one `by`, and `exportClicks` returns the raw clicks as CSV. Each works for one link (`linkId`) or all links, covers a range of days (`from` and `to`, at most 400 days, or 31 days by hour) and filters by any breakdown value. Bot clicks are left out unless you send `bots=include` or `bots=only`.
 
 In stats, `device` is the device type: `desktop`, `mobile` for phones, `tablet`, or another type such as `smarttv`. That differs from the device condition of redirect rules: in stats `mobile` excludes tablets, iOS and Android are values of `os`, and Safari on an iPad counts as `desktop` because it presents itself as a Mac.
 

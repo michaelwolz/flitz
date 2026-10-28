@@ -89,7 +89,9 @@ test("the time series counts Clicks and unique visitors per day of the instance'
 
 test("the UTM breakdowns come in one call and leave out Bot Clicks unless asked for", async () => {
   const link = await createLink("stats-utm");
-  const newsletter = (campaign: string) => ({ query: { utm_source: "newsletter", utm_campaign: campaign } });
+  const newsletter = (campaign: string) => ({
+    query: { utm_source: "newsletter", utm_campaign: campaign, utm_content: "header_button", utm_term: "link shortener" },
+  });
   await seed(
     { linkId: link.id, slug: link.slug },
     newsletter("spring"),
@@ -112,14 +114,27 @@ test("the UTM breakdowns come in one call and leave out Bot Clicks unless asked 
   ]);
   expect(await breakdown("only")).toEqual([{ value: "summer", clicks: 1 }]);
   expect(
-    (await get(`/api/stats/breakdown?linkId=${link.id}&by=utmSource&by=utmMedium&from=${date(10)}&to=${date(10)}`)).body.breakdowns,
+    (await get(`/api/stats/breakdown?linkId=${link.id}&by=utmSource&by=utmMedium&by=utmContent&by=utmTerm&from=${date(10)}&to=${date(10)}`))
+      .body.breakdowns,
   ).toEqual({
     utmSource: [
       { value: "newsletter", clicks: 3 },
       { value: "flyer", clicks: 1 },
     ],
     utmMedium: [{ value: null, clicks: 4 }],
+    utmContent: [
+      { value: "header_button", clicks: 3 },
+      { value: null, clicks: 1 },
+    ],
+    utmTerm: [
+      { value: "link shortener", clicks: 3 },
+      { value: null, clicks: 1 },
+    ],
   });
+  const range = `linkId=${link.id}&from=${date(10)}&to=${date(10)}`;
+  expect((await get(`/api/stats/time-series?${range}&utmContent=header_button&utmTerm=link+shortener`)).body.clicks).toBe(3);
+  expect((await get(`/api/stats/time-series?${range}&utmContent=&utmTerm=`)).body.clicks).toBe(1);
+  expect((await get(`/api/stats/breakdown?${range}&by=utmContent&utmTerm=missing`)).body.breakdowns.utmContent).toEqual([]);
 });
 
 test("the link breakdown lists the top Links with their Short URL and title, without Orphan Clicks", async () => {
@@ -170,14 +185,19 @@ test("the CSV export streams raw Clicks with a header row", async () => {
   const link = await createLink("stats-export");
   await seed(
     { linkId: link.id, slug: link.slug },
-    { os: "iOS", country: "DE", referrerDomain: "news.example.org", query: { utm_source: "newsletter", utm_campaign: "=1+1;@A1|-2" } },
+    {
+      os: "iOS",
+      country: "DE",
+      referrerDomain: "news.example.org",
+      query: { utm_source: "newsletter", utm_campaign: "=1+1;@A1|-2", utm_content: "header,button", utm_term: "=keyword" },
+    },
   );
 
   const response = await app.request(`/api/stats/export?linkId=${link.id}&from=${date(10)}&to=${date(10)}`, { headers: owner });
   expect(response.headers.get("content-type")).toBe("text/csv; charset=utf-8");
   expect((await response.text()).split("\r\n")).toEqual([
-    "clickedAt,shortUrl,linkId,bot,device,os,browser,country,region,referrer,utmSource,utmMedium,utmCampaign,query",
-    `${at(10, 12).toISOString()},http://localhost:3000/stats-export,${link.id},false,mobile,iOS,,DE,,news.example.org,newsletter,,"'=1+1;'@A1|'-2",utm_source=newsletter&utm_campaign=%3D1%2B1%3B%40A1%7C-2`,
+    "clickedAt,shortUrl,linkId,bot,device,os,browser,country,region,referrer,utmSource,utmMedium,utmCampaign,utmContent,utmTerm,query",
+    `${at(10, 12).toISOString()},http://localhost:3000/stats-export,${link.id},false,mobile,iOS,,DE,,news.example.org,newsletter,,"'=1+1;'@A1|'-2","header,button",'=keyword,utm_term=%3Dkeyword&utm_source=newsletter&utm_content=header%2Cbutton&utm_campaign=%3D1%2B1%3B%40A1%7C-2`,
     "",
   ]);
 });

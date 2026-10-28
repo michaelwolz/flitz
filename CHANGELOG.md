@@ -1,3 +1,9 @@
+## [0.5.1](https://github.com/michaelwolz/flitz/compare/v0.5.0...v0.5.1) (2026-10-28)
+
+### Bug Fixes
+
+* **stats:** separate marketing breakdowns and hide empty UTM cards ([f8eef4e](https://github.com/michaelwolz/flitz/commit/f8eef4e9cf990c53b4bf941fd53afa19e5ef1ee8))
+
 ## [0.5.0](https://github.com/michaelwolz/flitz/compare/v0.4.2...v0.5.0) (2026-10-28)
 
 ### Features

@@ -26,18 +26,9 @@ import { cn, countryName, displayUrl, linkName, titleLink } from "@/lib/utils";
 import type en from "@/locales/en.json";
 import { StatusBadge } from "./links.tsx";
 
-const dimensions = [
-  "country",
-  "device",
-  "os",
-  "browser",
-  "referrer",
-  "utmSource",
-  "utmMedium",
-  "utmCampaign",
-  "utmContent",
-  "utmTerm",
-] as const;
+const audienceDimensions = ["country", "device", "os", "browser", "referrer"] as const;
+const marketingDimensions = ["utmSource", "utmMedium", "utmCampaign", "utmContent", "utmTerm"] as const;
+const dimensions = [...audienceDimensions, ...marketingDimensions] as const;
 type Dimension = (typeof dimensions)[number];
 const botModes = ["exclude", "include", "only"] as const;
 type BotMode = (typeof botModes)[number];
@@ -160,7 +151,7 @@ function Toolbar({ stats }: { stats: Stats }) {
               const form = new FormData(event.currentTarget);
               update({ from: String(form.get("from")), to: String(form.get("to")) });
             }}
-            className="flex items-center gap-2"
+            className="flex flex-wrap items-center gap-2"
           >
             <Input type="date" name="from" required aria-label={t("stats.from")} defaultValue={from} className="h-8 w-auto" />
             <span aria-hidden="true" className="text-muted-foreground">
@@ -357,83 +348,100 @@ function Breakdowns({ stats }: { stats: Stats }) {
   const [params, update] = useStatsParams();
   const total = stats.timeSeries.clicks;
 
+  const marketing = marketingDimensions.filter((by) => stats.breakdowns[by]?.some(({ value }) => value !== null && value !== ""));
+  const groups = [
+    { name: "audience", dimensions: audienceDimensions },
+    { name: "marketing", dimensions: marketing },
+  ] as const;
+
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-6">
-      {dimensions.map((by) => {
-        const values = stats.breakdowns[by] ?? [];
-        const row = (label: string, clicks: number) => (
-          <>
-            <span className="truncate">{label}</span>
-            <span className="text-muted-foreground tabular-nums">
-              {formatNumber(clicks)} · {formatShare(clicks, total)}
-            </span>
-            <span className="col-span-2">
-              <Bar share={total ? clicks / total : 0} />
-            </span>
-          </>
-        );
-        const rowClass = "grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 rounded-md px-2 py-1.5 text-left";
-        const list = (shown: typeof values, inSheet = false) => {
-          const other = total - shown.reduce((sum, row) => sum + row.clicks, 0);
-          return (
-            <ul className="flex flex-col gap-1">
-              {shown.map(({ value, clicks }) => {
-                const filter = value ?? "";
-                const active = params.get(by) === filter;
-                const button = (
-                  <button
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => update({ [by]: active ? null : filter })}
-                    className={cn(
-                      rowClass,
-                      "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent",
-                    )}
-                  >
-                    {row(valueLabel(by, value), clicks)}
-                  </button>
+    <div className="flex flex-col gap-8">
+      {groups
+        .filter((group) => group.dimensions.length > 0)
+        .map((group) => (
+          <section key={group.name} aria-labelledby={`stats-${group.name}`} className="flex flex-col gap-4">
+            <h2 id={`stats-${group.name}`} className="font-heading text-heading">
+              {t(`stats.${group.name}`)}
+            </h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-6">
+              {group.dimensions.map((by) => {
+                const values = stats.breakdowns[by] ?? [];
+                const row = (label: string, clicks: number) => (
+                  <>
+                    <span className="truncate">{label}</span>
+                    <span className="text-muted-foreground tabular-nums">
+                      {formatNumber(clicks)} · {formatShare(clicks, total)}
+                    </span>
+                    <span className="col-span-2">
+                      <Bar share={total ? clicks / total : 0} />
+                    </span>
+                  </>
                 );
-                return <li key={filter}>{inSheet ? <SheetClose asChild>{button}</SheetClose> : button}</li>;
+                const rowClass = "grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 rounded-md px-2 py-1.5 text-left";
+                const list = (shown: typeof values, inSheet = false) => {
+                  const other = total - shown.reduce((sum, row) => sum + row.clicks, 0);
+                  return (
+                    <ul className="flex flex-col gap-1">
+                      {shown.map(({ value, clicks }) => {
+                        const filter = value ?? "";
+                        const active = params.get(by) === filter;
+                        const button = (
+                          <button
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => update({ [by]: active ? null : filter })}
+                            className={cn(
+                              rowClass,
+                              "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-accent",
+                            )}
+                          >
+                            {row(valueLabel(by, value), clicks)}
+                          </button>
+                        );
+                        return <li key={filter}>{inSheet ? <SheetClose asChild>{button}</SheetClose> : button}</li>;
+                      })}
+                      {other > 0 && <li className={rowClass}>{row(t("stats.other"), other)}</li>}
+                    </ul>
+                  );
+                };
+                return (
+                  <Card key={by} aria-labelledby={`breakdown-${by}`} className="gap-4">
+                    <CardHeader>
+                      <CardTitle id={`breakdown-${by}`}>{t(`stats.breakdowns.${by}`)}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                      {values.length ? list(values.slice(0, topValues)) : <p className="text-muted-foreground">{t("stats.noClicks")}</p>}
+                      {values.length > topValues && (
+                        <Sheet>
+                          <SheetTrigger asChild>
+                            <Button variant="link" size="sm" aria-describedby={`breakdown-${by}`} className="self-start px-2">
+                              {t("stats.showAll")}
+                            </Button>
+                          </SheetTrigger>
+                          <SheetContent>
+                            <SheetHeader className="pr-12">
+                              <SheetTitle>{t(`stats.breakdowns.${by}`)}</SheetTitle>
+                              <SheetDescription>{t("stats.allValues", { max: allValues })}</SheetDescription>
+                            </SheetHeader>
+                            <div className="overflow-y-auto px-2 pb-4">{list(values, true)}</div>
+                          </SheetContent>
+                        </Sheet>
+                      )}
+                      {by === "country" && (
+                        <a
+                          href="https://db-ip.com"
+                          className="self-start text-caption text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                        >
+                          {t("stats.geolocation")}
+                        </a>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
               })}
-              {other > 0 && <li className={rowClass}>{row(t("stats.other"), other)}</li>}
-            </ul>
-          );
-        };
-        return (
-          <Card key={by} aria-labelledby={`breakdown-${by}`} className="gap-4">
-            <CardHeader>
-              <CardTitle id={`breakdown-${by}`}>{t(`stats.breakdowns.${by}`)}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {values.length ? list(values.slice(0, topValues)) : <p className="text-muted-foreground">{t("stats.noClicks")}</p>}
-              {values.length > topValues && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="link" size="sm" aria-describedby={`breakdown-${by}`} className="self-start px-2">
-                      {t("stats.showAll")}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader className="pr-12">
-                      <SheetTitle>{t(`stats.breakdowns.${by}`)}</SheetTitle>
-                      <SheetDescription>{t("stats.allValues", { max: allValues })}</SheetDescription>
-                    </SheetHeader>
-                    <div className="overflow-y-auto px-2 pb-4">{list(values, true)}</div>
-                  </SheetContent>
-                </Sheet>
-              )}
-              {by === "country" && (
-                <a
-                  href="https://db-ip.com"
-                  className="self-start text-caption text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                >
-                  {t("stats.geolocation")}
-                </a>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+            </div>
+          </section>
+        ))}
     </div>
   );
 }

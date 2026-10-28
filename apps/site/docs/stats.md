@@ -15,7 +15,7 @@ Pick **7 days**, **30 days** or **12 months**, or set your own dates and choose 
 
 ## Breakdowns
 
-Below the chart, flitz breaks the clicks down by country, device, operating system, browser, referrer and UTM parameters. Select a value, such as a country, to filter all stats by it.
+Below the chart, **Audience** breaks the clicks down by country, device, operating system, browser and referrer. **Marketing** shows the UTM breakdowns. A UTM breakdown stays hidden when all its values are missing, and the Marketing section stays hidden when there are no UTM values. Select a value, such as a country, to filter all stats by it.
 
 <figure>
   <img src="screenshots/stats-breakdowns.png" alt="Breakdowns of clicks by country and by device." width="640" height="530" />

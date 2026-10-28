@@ -65,6 +65,8 @@ test("sign up, create a link with the App Store preset, find it in the links lis
   const chart = page.getByRole("figure", { name: "Clicks per day" });
   await expect(chart.getByRole("application", { name: /^Clicks and unique visitors per day/ })).toBeVisible();
   await expect(chart).toContainText("No clicks in this time range.");
+  await expect(page.getByRole("region", { name: "Audience", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Marketing", exact: true })).toHaveCount(0);
 });
 
 test("create an API key, see it exactly once and find it in the list", async ({ page }) => {

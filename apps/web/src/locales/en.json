@@ -173,6 +173,8 @@
     "uniqueVisitorsHint": "Unique visitors are counted per day, so they are not added up for the time range.",
     "showTable": "Show as table",
     "day": "Day",
+    "audience": "Audience",
+    "marketing": "Marketing",
     "breakdowns": {
       "country": "Countries",
       "device": "Devices",

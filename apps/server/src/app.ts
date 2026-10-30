@@ -1,3 +1,4 @@
+import { connectDb } from "@flitzlink/db";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
@@ -12,8 +13,8 @@ import { connectedAppRoutes } from "./connected-apps.ts";
 import { consentRoutes } from "./consent.ts";
 import { docs } from "./docs.ts";
 import { domainRoutes } from "./domains.ts";
-import { connectStores, lowercaseList, optionalWebUrl, required, version, wholeNumber } from "./env.ts";
-import { createLinkCache, type DomainEnv } from "./link-cache.ts";
+import { lowercaseList, optionalWebUrl, required, version, wholeNumber } from "./env.ts";
+import { createLinkStore, type DomainEnv } from "./link-store.ts";
 import { linkDeletionRoutes } from "./link-deletion.ts";
 import { linkRoutes, reservedSlugs, slugPattern } from "./links.ts";
 import { mcpEndpoint } from "./mcp.ts";
@@ -44,17 +45,17 @@ export async function createApp(
   const baseUrl = required(env, "BASE_URL");
   const instanceHostname = new URL(baseUrl).hostname;
   const legal = { imprint: optionalWebUrl(env, "IMPRINT_URL"), privacyPolicy: optionalWebUrl(env, "PRIVACY_POLICY_URL") };
-  const { db, redis } = await connectStores(env);
-  const linkCache = await createLinkCache(db, redis, instanceHostname);
-  const limits = rateLimits(env, redis);
+  const db = await connectDb(required(env, "DATABASE_URL"));
+  const linkStore = createLinkStore(db, instanceHostname);
+  const limits = rateLimits(env, db);
   const sendEmail = createMailer(env);
   const adminEmails = lowercaseList(env, "ADMIN_EMAILS");
   const auth = createAuth(db, env, limits.auth, sendEmail, adminEmails, fetchClientMetadata);
 
   const { access, authorize, sessionUser } = authorizer(db, auth, baseUrl);
   const routes = [
-    ...linkRoutes(db, baseUrl, linkCache),
-    ...domainRoutes(db, baseUrl, linkCache),
+    ...linkRoutes(db, baseUrl),
+    ...domainRoutes(db, baseUrl),
     ...apiKeyRoutes(db),
     ...qrRoutes(db, baseUrl),
     ...presetRoutes(db),
@@ -91,10 +92,10 @@ export async function createApp(
   app.get("/healthz", (c) => c.text("ok"));
   app.get("/api/domains/known", async (c) => {
     const hostname = c.req.query("domain")?.toLowerCase() ?? "";
-    return c.body(null, (await linkCache.resolveHost(hostname)) === undefined ? 404 : 200);
+    return c.body(null, (await linkStore.resolveHost(hostname)) === undefined ? 404 : 200);
   });
   app.use(async (c, next) => {
-    const domain = await linkCache.resolveHost(new URL(c.req.url).hostname);
+    const domain = await linkStore.resolveHost(new URL(c.req.url).hostname);
     if (domain === undefined || (domain && /^\/(api|app|docs)(\/|$)/.test(c.req.path))) return c.notFound();
     c.set("domain", domain);
     await next();
@@ -125,7 +126,7 @@ export async function createApp(
   app.route("/api/users", userRoutes(db, auth, baseUrl, adminEmails, sendEmail));
   app.route("/", api);
   app.route("/docs", await docs(baseUrl));
-  app.get("/qr/:file{[a-zA-Z0-9-]+\\.(?:svg|png)}", limits.redirects, qrCodeHandler(baseUrl, linkCache));
+  app.get("/qr/:file{[a-zA-Z0-9-]+\\.(?:svg|png)}", limits.redirects, qrCodeHandler(baseUrl, linkStore));
   const cacheControl =
     (value: string): MiddlewareHandler =>
     (c, next) => {
@@ -145,16 +146,16 @@ export async function createApp(
     if (reservedSlugs.has(slug)) return c.notFound();
     const { domain } = c.var;
     const isSlug = slugPattern.test(slug);
-    const link = isSlug ? await linkCache.resolve(domain?.id ?? null, slug) : null;
+    const link = isSlug ? await linkStore.resolve(domain?.id ?? null, slug) : null;
     if (isSlug) {
       const facts = requestFacts(c, lookupLocation);
       const shortUrl = { linkId: link?.id, domainId: domain?.id, slug };
-      recordClick(redis, c, facts, shortUrl).catch((error) => console.error("Cannot record Click:", error));
+      await recordClick(db, c, facts, shortUrl).catch((error) => console.error("Cannot record Click:", error));
       if (link) return redirect(c, link, facts);
     }
     if (domain?.fallbackUrl && !link) return c.redirect(domain.fallbackUrl, 302);
     return c.html(notFoundPage(`${new URL(c.req.url).host}/${c.req.param("slug")}`, legal), 404);
   });
 
-  return { app, close: () => Promise.all([linkCache.close(), redis.close(), db.$client.end()]) };
+  return { app, close: () => db.$client.end() };
 }

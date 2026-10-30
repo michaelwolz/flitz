@@ -13,7 +13,7 @@ CREATE TABLE "accounts" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE "api_keys" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE "api_keys" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "api_keys_key_hash_unique" UNIQUE("key_hash")
 );
---> statement-breakpoint
+
 CREATE TABLE "clicks" (
 	"id" text NOT NULL,
 	"clicked_at" timestamp with time zone NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE "clicks" (
 	"visitor_hash" text NOT NULL,
 	CONSTRAINT "clicks_clicked_at_id_pk" PRIMARY KEY("clicked_at","id")
 ) PARTITION BY RANGE ("clicked_at");
---> statement-breakpoint
+
 CREATE TABLE "domains" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"hostname" text NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE "domains" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "domains_hostname_unique" UNIQUE("hostname")
 );
---> statement-breakpoint
+
 CREATE TABLE "invitations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE "invitations" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "invitations_email_unique" UNIQUE("email")
 );
---> statement-breakpoint
+
 CREATE TABLE "jwks" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"public_key" text NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE "jwks" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"expires_at" timestamp with time zone
 );
---> statement-breakpoint
+
 CREATE TABLE "links" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"domain_id" uuid,
@@ -84,7 +84,7 @@ CREATE TABLE "links" (
 	CONSTRAINT "links_domain_id_slug_unique" UNIQUE NULLS NOT DISTINCT("domain_id","slug"),
 	CONSTRAINT "links_slug_lowercase" CHECK ("links"."slug" = lower("links"."slug"))
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_access_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"token" text NOT NULL,
@@ -103,12 +103,12 @@ CREATE TABLE "oauth_access_tokens" (
 	"scopes" text[] NOT NULL,
 	CONSTRAINT "oauth_access_tokens_token_unique" UNIQUE("token")
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_client_assertions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_client_resources" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"client_id" text NOT NULL,
@@ -117,7 +117,7 @@ CREATE TABLE "oauth_client_resources" (
 	"created_at" timestamp with time zone,
 	CONSTRAINT "oauth_client_resources_client_id_resource_id_unique" UNIQUE("client_id","resource_id")
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_clients" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"client_id" text NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE "oauth_clients" (
 	"metadata" jsonb,
 	CONSTRAINT "oauth_clients_client_id_unique" UNIQUE("client_id")
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_consents" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"client_id" text NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE "oauth_consents" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_refresh_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"token" text NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE "oauth_refresh_tokens" (
 	"scopes" text[] NOT NULL,
 	CONSTRAINT "oauth_refresh_tokens_token_unique" UNIQUE("token")
 );
---> statement-breakpoint
+
 CREATE TABLE "oauth_resources" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"identifier" text NOT NULL,
@@ -210,7 +210,7 @@ CREATE TABLE "oauth_resources" (
 	"metadata" jsonb,
 	CONSTRAINT "oauth_resources_identifier_unique" UNIQUE("identifier")
 );
---> statement-breakpoint
+
 CREATE TABLE "sessions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE "sessions" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "sessions_token_unique" UNIQUE("token")
 );
---> statement-breakpoint
+
 CREATE TABLE "settings" (
 	"id" boolean PRIMARY KEY DEFAULT true NOT NULL,
 	"time_zone" text DEFAULT 'UTC' NOT NULL,
@@ -230,7 +230,7 @@ CREATE TABLE "settings" (
 	"app_store_provider_token" text,
 	CONSTRAINT "settings_single_row" CHECK ("settings"."id")
 );
---> statement-breakpoint
+
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -242,7 +242,7 @@ CREATE TABLE "users" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
---> statement-breakpoint
+
 CREATE TABLE "verifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"identifier" text NOT NULL,
@@ -251,41 +251,60 @@ CREATE TABLE "verifications" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
---> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "links" ADD CONSTRAINT "links_domain_id_domains_id_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_refresh_id_oauth_refresh_tokens_id_fk" FOREIGN KEY ("refresh_id") REFERENCES "public"."oauth_refresh_tokens"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_client_resources" ADD CONSTRAINT "oauth_client_resources_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_client_resources" ADD CONSTRAINT "oauth_client_resources_resource_id_oauth_resources_identifier_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."oauth_resources"("identifier") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_clients" ADD CONSTRAINT "oauth_clients_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_consents" ADD CONSTRAINT "oauth_consents_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_consents" ADD CONSTRAINT "oauth_consents_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "accounts_user_id_index" ON "accounts" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "clicks_link_id_clicked_at_index" ON "clicks" USING btree ("link_id","clicked_at");--> statement-breakpoint
-CREATE INDEX "clicks_domain_id_slug_clicked_at_index" ON "clicks" USING btree ("domain_id","slug","clicked_at") WHERE "clicks"."link_id" is null;--> statement-breakpoint
-CREATE INDEX "links_created_at_index" ON "links" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "oauth_access_tokens_client_id_index" ON "oauth_access_tokens" USING btree ("client_id");--> statement-breakpoint
-CREATE INDEX "oauth_access_tokens_session_id_index" ON "oauth_access_tokens" USING btree ("session_id");--> statement-breakpoint
-CREATE INDEX "oauth_access_tokens_user_id_index" ON "oauth_access_tokens" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "oauth_access_tokens_authorization_code_id_index" ON "oauth_access_tokens" USING btree ("authorization_code_id");--> statement-breakpoint
-CREATE INDEX "oauth_access_tokens_refresh_id_index" ON "oauth_access_tokens" USING btree ("refresh_id");--> statement-breakpoint
-CREATE INDEX "oauth_client_resources_resource_id_index" ON "oauth_client_resources" USING btree ("resource_id");--> statement-breakpoint
-CREATE INDEX "oauth_clients_user_id_index" ON "oauth_clients" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "oauth_consents_client_id_index" ON "oauth_consents" USING btree ("client_id");--> statement-breakpoint
-CREATE INDEX "oauth_consents_user_id_index" ON "oauth_consents" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "oauth_refresh_tokens_client_id_index" ON "oauth_refresh_tokens" USING btree ("client_id");--> statement-breakpoint
-CREATE INDEX "oauth_refresh_tokens_session_id_index" ON "oauth_refresh_tokens" USING btree ("session_id");--> statement-breakpoint
-CREATE INDEX "oauth_refresh_tokens_user_id_index" ON "oauth_refresh_tokens" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "oauth_refresh_tokens_authorization_code_id_index" ON "oauth_refresh_tokens" USING btree ("authorization_code_id");--> statement-breakpoint
-CREATE INDEX "sessions_user_id_index" ON "sessions" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "verifications_identifier_index" ON "verifications" USING btree ("identifier");--> statement-breakpoint
+
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "links" ADD CONSTRAINT "links_domain_id_domains_id_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_access_tokens" ADD CONSTRAINT "oauth_access_tokens_refresh_id_oauth_refresh_tokens_id_fk" FOREIGN KEY ("refresh_id") REFERENCES "public"."oauth_refresh_tokens"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_client_resources" ADD CONSTRAINT "oauth_client_resources_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_client_resources" ADD CONSTRAINT "oauth_client_resources_resource_id_oauth_resources_identifier_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."oauth_resources"("identifier") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_clients" ADD CONSTRAINT "oauth_clients_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_consents" ADD CONSTRAINT "oauth_consents_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_consents" ADD CONSTRAINT "oauth_consents_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_client_id_oauth_clients_client_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."oauth_clients"("client_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "oauth_refresh_tokens" ADD CONSTRAINT "oauth_refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+CREATE INDEX "accounts_user_id_index" ON "accounts" USING btree ("user_id");
+CREATE INDEX "clicks_link_id_clicked_at_index" ON "clicks" USING btree ("link_id","clicked_at");
+CREATE INDEX "clicks_domain_id_slug_clicked_at_index" ON "clicks" USING btree ("domain_id","slug","clicked_at") WHERE "clicks"."link_id" is null;
+CREATE INDEX "links_created_at_index" ON "links" USING btree ("created_at");
+CREATE INDEX "oauth_access_tokens_client_id_index" ON "oauth_access_tokens" USING btree ("client_id");
+CREATE INDEX "oauth_access_tokens_session_id_index" ON "oauth_access_tokens" USING btree ("session_id");
+CREATE INDEX "oauth_access_tokens_user_id_index" ON "oauth_access_tokens" USING btree ("user_id");
+CREATE INDEX "oauth_access_tokens_authorization_code_id_index" ON "oauth_access_tokens" USING btree ("authorization_code_id");
+CREATE INDEX "oauth_access_tokens_refresh_id_index" ON "oauth_access_tokens" USING btree ("refresh_id");
+CREATE INDEX "oauth_client_resources_resource_id_index" ON "oauth_client_resources" USING btree ("resource_id");
+CREATE INDEX "oauth_clients_user_id_index" ON "oauth_clients" USING btree ("user_id");
+CREATE INDEX "oauth_consents_client_id_index" ON "oauth_consents" USING btree ("client_id");
+CREATE INDEX "oauth_consents_user_id_index" ON "oauth_consents" USING btree ("user_id");
+CREATE INDEX "oauth_refresh_tokens_client_id_index" ON "oauth_refresh_tokens" USING btree ("client_id");
+CREATE INDEX "oauth_refresh_tokens_session_id_index" ON "oauth_refresh_tokens" USING btree ("session_id");
+CREATE INDEX "oauth_refresh_tokens_user_id_index" ON "oauth_refresh_tokens" USING btree ("user_id");
+CREATE INDEX "oauth_refresh_tokens_authorization_code_id_index" ON "oauth_refresh_tokens" USING btree ("authorization_code_id");
+CREATE INDEX "sessions_user_id_index" ON "sessions" USING btree ("user_id");
+CREATE INDEX "verifications_identifier_index" ON "verifications" USING btree ("identifier");
 insert into "settings" default values;
+
+CREATE TABLE "maintenance_runs" (
+	"day" text PRIMARY KEY NOT NULL
+);
+
+CREATE UNLOGGED TABLE "rate_limits" (
+	"key" text PRIMARY KEY NOT NULL,
+	"count" integer NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL
+);
+
+CREATE TABLE "visitor_salt" (
+	"id" integer PRIMARY KEY NOT NULL,
+	"day" text NOT NULL,
+	"salt" text NOT NULL,
+	CONSTRAINT "visitor_salt_singleton" CHECK ("visitor_salt"."id" = 1)
+);
+
+CREATE INDEX "rate_limits_expires_at_index" ON "rate_limits" USING btree ("expires_at");

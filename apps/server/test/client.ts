@@ -1,6 +1,5 @@
 import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
-import { connectAndMigrate, sql } from "@flitzlink/db";
-import { createClient } from "redis";
+import { connectDb, sql } from "@flitzlink/db";
 import { expect, inject, vi } from "vitest";
 import type { createApp } from "../src/app.ts";
 
@@ -10,31 +9,20 @@ export const password = "correct horse battery";
 
 export const newClient = () => ({ "x-forwarded-for": `10.${randomInt(256)}.${randomInt(256)}.${randomInt(256)}` });
 
-let flushedRedis: Promise<void> | undefined;
-
-/** A fresh database and this test file's own Redis database, with sign-up open to example.com as admin. */
+/** A fresh database, with sign-up open to example.com as admin. */
 export async function testEnv(overrides: Record<string, string | undefined> = {}) {
   const env = inject("env");
-  const redisUrl = `${env.REDIS_URL}/${Number(process.env.VITEST_POOL_ID)}`;
-  flushedRedis ??= createClient({ url: redisUrl })
-    .connect()
-    .then(async (redis) => {
-      await redis.flushDb();
-      await redis.close();
-    });
   const name = `test_${randomUUID().replaceAll("-", "")}`;
-  const server = await connectAndMigrate(env.DATABASE_URL);
+  const server = await connectDb(env.DATABASE_URL);
   await server.execute(sql.raw(`create database ${name}`));
   await server.$client.end();
   const databaseUrl = new URL(env.DATABASE_URL);
   databaseUrl.pathname = `/${name}`;
-  const db = await connectAndMigrate(databaseUrl.href);
+  const db = await connectDb(databaseUrl.href);
   await db.$client.end();
-  await flushedRedis;
   return {
     ...env,
     DATABASE_URL: databaseUrl.href,
-    REDIS_URL: redisUrl,
     SIGNUP_DOMAINS: "example.com",
     DEFAULT_ROLE: "admin",
     ...overrides,

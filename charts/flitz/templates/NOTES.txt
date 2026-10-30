@@ -1,6 +1,6 @@
 {{- $missing := list }}
 {{- if not .Values.existingSecret }}
-{{- range list "DATABASE_URL" "REDIS_URL" "AUTH_SECRET" }}
+{{- range list "DATABASE_URL" "AUTH_SECRET" }}
 {{- if not (get $.Values.secrets .) }}{{ $missing = append $missing (print "secrets." .) }}{{ end }}
 {{- end }}
 {{- end }}

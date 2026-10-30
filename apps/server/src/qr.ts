@@ -5,7 +5,7 @@ import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import type { Handler } from "hono";
 import { encode } from "uqr";
 import { apiRoute } from "./api.ts";
-import type { DomainEnv, LinkCache } from "./link-cache.ts";
+import type { DomainEnv, LinkStore } from "./link-store.ts";
 import { linkNotFound, linkParams, shortUrl } from "./links.ts";
 
 const contentTypes = { svg: "image/svg+xml", png: "image/png" };
@@ -91,11 +91,11 @@ export function qrRoutes(db: Db, baseUrl: string) {
   ];
 }
 
-export function qrCodeHandler(baseUrl: string, linkCache: LinkCache): Handler<DomainEnv, "/qr/:file"> {
+export function qrCodeHandler(baseUrl: string, linkStore: LinkStore): Handler<DomainEnv, "/qr/:file"> {
   return async (c) => {
     const [slug, format] = c.req.param("file").toLowerCase().split(".");
     const { domain } = c.var;
-    const link = await linkCache.resolve(domain?.id ?? null, slug);
+    const link = await linkStore.resolve(domain?.id ?? null, slug);
     if (!link) return c.notFound();
     return qrResponse(shortUrl(baseUrl, domain?.hostname ?? null, slug), format as Format, "public, max-age=86400");
   };

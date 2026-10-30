@@ -17,8 +17,6 @@ baseUrl: ""
 secrets:
   # Postgres connection URL, such as postgres://flitz:secret@postgres:5432/flitz. Required.
   DATABASE_URL: ""
-  # Redis connection URL, such as redis://redis:6379. Required.
-  REDIS_URL: ""
   # A random secret of at least 32 characters that signs sessions, such as the output of
   # `openssl rand -base64 32`. Required. Keep it the same across upgrades.
   AUTH_SECRET: ""
@@ -33,7 +31,7 @@ secrets:
   MICROSOFT_CLIENT_SECRET: ""
 
 # The name of an existing Secret with the settings above, under keys named like them
-# (DATABASE_URL, REDIS_URL, AUTH_SECRET, ...). Its keys win over secrets.
+# (DATABASE_URL, AUTH_SECRET, ...). Its keys win over secrets.
 existingSecret: ""
 
 # Plain settings. Empty ones are left out, so flitz uses its default. Quote numbers and booleans.
@@ -85,7 +83,7 @@ server:
   replicas: 1
   resources: {}
 
-# Writes clicks from Redis to Postgres in batches. Run at least one.
+# Runs hourly maintenance for retention and expired sessions. Run at least one.
 worker:
   replicas: 1
   resources: {}

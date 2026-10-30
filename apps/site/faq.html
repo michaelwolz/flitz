@@ -40,9 +40,9 @@
           <p>No. flitz is self-hosted only, and no hosted version is planned: you run it on your own servers.</p>
           <h3>What do I need to run flitz myself?</h3>
           <p>
-            One Docker image next to Postgres and Redis. Start it with docker compose from a checkout of the repository, or on Kubernetes
-            with the Helm chart. The image runs as a server, which answers short URLs, the web app, the API and MCP, and as a worker, which
-            writes clicks to Postgres. flitz doesn't handle TLS, so put a reverse proxy or ingress in front of it. The
+            One Docker image next to Postgres. Start it with docker compose from a checkout of the repository, or on Kubernetes with the
+            Helm chart. The image runs as a server, which answers short URLs, the web app, the API and MCP, and as a worker, which runs
+            retention and session cleanup. flitz doesn't handle TLS, so put a reverse proxy or ingress in front of it. The
             <a href="./docs/self-hosting.html#settings">self-hosting guide</a> lists every setting.
           </p>
           <h3>Which AI agents can use flitz?</h3>
@@ -129,8 +129,8 @@
           <h2 id="faq-data">Your data and security</h2>
           <h3>Where does my data live?</h3>
           <p>
-            On your own servers. Links, accounts and clicks are stored in your Postgres database, and new clicks wait in Redis until the
-            worker writes them. The country lookup uses the database bundled with flitz, so it needs no outside service.
+            On your own servers. Links, accounts and clicks are stored in your Postgres database, and clicks are written directly during
+            each request. The country lookup uses the database bundled with flitz, so it needs no outside service.
           </p>
           <h3>Can I import my links, and can I leave again?</h3>
           <p>

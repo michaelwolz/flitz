@@ -14,7 +14,7 @@ To sign off commits you already made, run `git rebase --signoff main` and push a
 
 ## Development
 
-You need Node 24, pnpm (the version is pinned in `package.json`) and Docker, since the tests start Postgres and Redis with Testcontainers.
+You need Node 24, pnpm (the version is pinned in `package.json`) and Docker, since the tests start Postgres with Testcontainers.
 
 ```sh
 pnpm install

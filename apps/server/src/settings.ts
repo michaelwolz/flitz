@@ -43,7 +43,7 @@ const settingsColumns = {
   appStoreProviderToken: settings.appStoreProviderToken,
 };
 
-export async function readSettings(db: Db): Promise<Settings> {
+export async function readSettings(db: Pick<Db, "select">): Promise<Settings> {
   const [row] = await db.select(settingsColumns).from(settings);
   return row;
 }

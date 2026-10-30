@@ -327,3 +327,27 @@ export const oauthClientAssertions = pgTable("oauth_client_assertions", {
   id: uuid("id").primaryKey(),
   expiresAt: timestamptz("expires_at").notNull(),
 });
+
+export const visitorSalt = pgTable(
+  "visitor_salt",
+  {
+    id: integer("id").primaryKey(),
+    day: text("day").notNull(),
+    salt: text("salt").notNull(),
+  },
+  (table) => [check("visitor_salt_singleton", sql`${table.id} = 1`)],
+);
+
+export const rateLimitCounters = pgTable(
+  "rate_limits",
+  {
+    key: text("key").primaryKey(),
+    count: integer("count").notNull(),
+    expiresAt: timestamptz("expires_at").notNull(),
+  },
+  (table) => [index().on(table.expiresAt)],
+);
+
+export const maintenanceRuns = pgTable("maintenance_runs", {
+  day: text("day").primaryKey(),
+});

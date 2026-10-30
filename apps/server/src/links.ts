@@ -2,7 +2,6 @@ import { randomInt } from "node:crypto";
 import { type Db, desc, devices, domains, eq, ilike, links, or } from "@flitzlink/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { apiError, apiRoute, jsonBody, jsonResponse, limitParam } from "./api.ts";
-import type { LinkCache } from "./link-cache.ts";
 
 const slugAlphabet = "23456789abcdefghjkmnpqrstuvwxyz";
 export const reservedSlugs = new Set(["api", "app", "docs", "qr", "health", "healthz", "assets", "static", "oauth"]);
@@ -102,7 +101,7 @@ export const linkParams = z.object({
     .meta({ description: "The link's `id`, as `createLink` and `listLinks` return it. Not its slug." }),
 });
 
-export function linkRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
+export function linkRoutes(db: Db, baseUrl: string) {
   const toJson = ({ link, hostname }: { link: typeof links.$inferSelect; hostname: string | null }) => ({
     id: link.id,
     slug: link.slug,
@@ -138,7 +137,6 @@ export function linkRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
       .where(eq(links.id, id))
       .returning({ id: links.id, domainId: links.domainId, slug: links.slug });
     if (!link) throw linkNotFound();
-    await linkCache.invalidate(link.domainId, link.slug);
     return findLink(id);
   }
 
@@ -180,7 +178,6 @@ export function linkRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
             .onConflictDoNothing()
             .returning();
           if (link) {
-            await linkCache.invalidate(link.domainId, link.slug);
             return c.json(toJson({ link, hostname: domain?.hostname ?? null }), 201);
           }
           if (slug !== undefined) throw slugTaken(slug);

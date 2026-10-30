@@ -4,14 +4,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "exports": "./src/index.ts",
-  "scripts": {
-    "generate": "drizzle-kit generate"
-  },
   "dependencies": {
     "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.9"
-  },
-  "devDependencies": {
-    "drizzle-kit": "^0.31.11"
   }
 }

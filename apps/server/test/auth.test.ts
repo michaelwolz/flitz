@@ -1,4 +1,4 @@
-import { connectAndMigrate, eq, users } from "@flitzlink/db";
+import { connectDb, eq, users } from "@flitzlink/db";
 import { afterAll, expect, test, vi } from "vitest";
 import { createApp } from "../src/app.ts";
 import {
@@ -141,7 +141,7 @@ test("an unverified first sign-up older than an hour doesn't block the instance"
   const environment = await testEnv(invitationOnly);
   const app = await instance(environment);
   const { user } = await (await signUp(app, "stale-first@example.com")).json();
-  const db = await connectAndMigrate(environment.DATABASE_URL);
+  const db = await connectDb(environment.DATABASE_URL);
   await db
     .update(users)
     .set({ createdAt: new Date(Date.now() - 61 * 60 * 1000) })

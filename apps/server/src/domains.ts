@@ -1,7 +1,6 @@
 import { asc, type Db, domains, eq, links } from "@flitzlink/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { apiError, apiRoute, jsonBody, jsonResponse } from "./api.ts";
-import type { LinkCache } from "./link-cache.ts";
 import { httpUrl } from "./links.ts";
 
 const Domain = z
@@ -29,7 +28,7 @@ function toJson(domain: typeof domains.$inferSelect) {
   return { id: domain.id, hostname: domain.hostname, fallbackUrl: domain.fallbackUrl, createdAt: domain.createdAt.toISOString() };
 }
 
-export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
+export function domainRoutes(db: Db, baseUrl: string) {
   const host = new URL(baseUrl).hostname;
   const pointAtInstance = `add a CNAME record for the hostname that points to ${host} (for an apex domain such as example.com, which can't have a CNAME record, use an ALIAS or ANAME record, or A/AAAA records with the addresses of ${host}), so visitors of its short URLs reach this instance`;
 
@@ -77,7 +76,6 @@ export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
         }
         const [domain] = await db.insert(domains).values({ hostname, fallbackUrl }).onConflictDoNothing().returning();
         if (!domain) throw apiError(409, "DOMAIN_TAKEN", `${hostname} is already a custom domain of this instance.`);
-        await linkCache.invalidateHost(domain.hostname);
         return c.json(toJson(domain), 201);
       },
     }),
@@ -117,7 +115,6 @@ export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
           .where(eq(domains.id, c.req.valid("param").id))
           .returning();
         if (!domain) throw domainNotFound();
-        await linkCache.invalidateHost(domain.hostname);
         return c.json(toJson(domain), 200);
       },
     }),
@@ -144,7 +141,6 @@ export function domainRoutes(db: Db, baseUrl: string, linkCache: LinkCache) {
           );
         }
         await db.delete(domains).where(eq(domains.id, domain.id));
-        await linkCache.invalidateHost(domain.hostname);
         return c.body(null, 204);
       },
     }),

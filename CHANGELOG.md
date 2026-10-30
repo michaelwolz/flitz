@@ -1,3 +1,17 @@
+## [1.0.0](https://github.com/michaelwolz/flitz/compare/v0.5.1...v1.0.0) (2026-10-30)
+
+### ⚠ BREAKING CHANGES
+
+* **server:** flitz no longer uses Redis or database migrations. It
+installs its schema on an empty database only.
+
+Signed-off-by: Michael Wolz <michaelwolz93@gmail.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+### Features
+
+* **server:** remove Redis dependency ([ec6f3b8](https://github.com/michaelwolz/flitz/commit/ec6f3b8fa3696beea5a9f5d0395a04803a18c4d0))
+
 ## [0.5.1](https://github.com/michaelwolz/flitz/compare/v0.5.0...v0.5.1) (2026-10-28)
 
 ### Bug Fixes

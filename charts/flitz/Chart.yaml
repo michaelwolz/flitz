@@ -2,8 +2,8 @@ apiVersion: v2
 name: flitz
 description: Self-hostable link shortener with device and country redirect rules and privacy-preserving click analytics
 type: application
-version: 0.5.1
-appVersion: "0.5.1"
+version: 1.0.0
+appVersion: "1.0.0"
 home: https://github.com/michaelwolz/flitz
 sources:
   - https://github.com/michaelwolz/flitz

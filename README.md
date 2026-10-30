@@ -40,7 +40,7 @@ links.example.com/get-app
 - **Click stats without tracking.** No cookies, no fingerprinting, and IP addresses are never stored. Unique visitors are counted with a salt that is destroyed every day, and bot clicks are kept apart.
 - **Built for AI agents.** Every API operation is also an MCP tool with the same scopes as an API key. Connect Claude, ChatGPT or Cursor with one sign-in.
 - **Custom domains and QR codes**, one team per instance with admin, member and viewer roles, and scoped API keys.
-- **One Docker image** next to Postgres and Redis, with docker compose or a Helm chart.
+- **One Docker image** next to Postgres, with docker compose or a Helm chart.
 
 ## Quick start
 
@@ -52,7 +52,7 @@ cd flitz
 docker compose --profile demo up
 ```
 
-This builds the image and starts flitz, the click worker, Postgres and Redis. Open http://localhost:3000/app and sign up: the first person to sign up and verify their email becomes admin and can invite everyone else. Without SMTP configured, emails such as the verification link go to the server log while flitz runs on localhost (`docker compose logs server`).
+This builds the image and starts flitz, the maintenance worker, Postgres. Open http://localhost:3000/app and sign up: the first person to sign up and verify their email becomes admin and can invite everyone else. Without SMTP configured, emails such as the verification link go to the server log while flitz runs on localhost (`docker compose logs server`).
 
 The `demo` profile seeds a demo link, so this answers with a redirect to example.com:
 
@@ -71,7 +71,7 @@ Before going public, follow the [self-hosting guide](apps/server/docs/self-hosti
 | `apps/server`  | Redirects, REST API, MCP server and the docs it serves |
 | `apps/web`     | The web app (React, shadcn/ui)                         |
 | `apps/site`    | The website, published on GitHub Pages                 |
-| `packages/db`  | Database schema and migrations (Drizzle)               |
+| `packages/db`  | Database base schema and Drizzle models                |
 | `charts/flitz` | Helm chart                                             |
 | `docs`         | Brand assets and design tokens                         |
 

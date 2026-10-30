@@ -1,4 +1,4 @@
-import { connectAndMigrate, links } from "@flitzlink/db";
+import { connectDb, links } from "@flitzlink/db";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
 import { testEnv } from "./client.ts";
@@ -8,7 +8,7 @@ const { app, close } = await createApp(env);
 afterAll(close);
 
 beforeAll(async () => {
-  const db = await connectAndMigrate(env.DATABASE_URL);
+  const db = await connectDb(env.DATABASE_URL);
   await db.insert(links).values({
     slug: "abc2345",
     defaultTarget: "https://example.com/landing?utm_source=print&lang=en",

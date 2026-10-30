@@ -1,4 +1,4 @@
-import { clicks, connectAndMigrate, links } from "@flitzlink/db";
+import { clicks, connectDb, links } from "@flitzlink/db";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { afterAll, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
@@ -15,7 +15,7 @@ const agent = {
 };
 const env = await testEnv();
 const { app, close } = await createApp(env, { fetchClientMetadata: async () => Response.json(agent) });
-const db = await connectAndMigrate(env.DATABASE_URL);
+const db = await connectDb(env.DATABASE_URL);
 afterAll(() => Promise.all([close(), db.$client.end()]));
 
 async function apiKey(email: string, scopes: string[]) {

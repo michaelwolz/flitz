@@ -87,7 +87,7 @@ jobs:
       - name: Import the server and worker modules on a read-only filesystem
         run: >-
           docker run --rm --read-only --entrypoint node flitz --input-type=module
-          -e 'await import("/app/apps/server/src/app.ts"); await import("/app/apps/server/src/clicks.ts")'
+          -e 'await import("/app/apps/server/src/app.ts"); await import("/app/apps/server/src/retention.ts")'
 
   e2e:
     runs-on: ubuntu-latest

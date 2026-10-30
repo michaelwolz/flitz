@@ -5,7 +5,7 @@
     "correctness": "error",
     "suspicious": "warn"
   },
-  "ignorePatterns": ["packages/db/drizzle/**", "apps/web/src/components/ui/**", "apps/web/src/hooks/use-mobile.ts"],
+  "ignorePatterns": ["apps/web/src/components/ui/**", "apps/web/src/hooks/use-mobile.ts"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": "off",

@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { clicks, connectAndMigrate, eq, inArray, sessions, sql, users } from "@flitzlink/db";
-import { createClient } from "redis";
+import { clicks, connectDb, eq, inArray, sessions, sql, users } from "@flitzlink/db";
 import { afterAll, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
 import { createPartitions } from "../src/clicks.ts";
@@ -9,9 +8,8 @@ import { call, testEnv, verifiedUser } from "./client.ts";
 
 const env = await testEnv();
 const { app, close } = await createApp(env);
-const db = await connectAndMigrate(env.DATABASE_URL);
-const redis = await createClient({ url: env.REDIS_URL }).connect();
-afterAll(() => Promise.all([close(), db.$client.end(), redis.close()]));
+const db = await connectDb(env.DATABASE_URL);
+afterAll(() => Promise.all([close(), db.$client.end()]));
 const admin = { cookie: (await verifiedUser(app, "retention-admin@example.com")).cookie };
 
 const monthStart = (monthsAgo: number) => {
@@ -49,8 +47,18 @@ test("the Retention job deletes Clicks older than the Retention Period and old s
   });
   await db.insert(sessions).values([expiredDaysAgo(31), expiredDaysAgo(29)]);
 
-  expect(await runRetention(db, redis)).toBe(true);
-  expect(await runRetention(db, redis)).toBe(false);
+  await db.execute(sql`insert into rate_limits (key, count, expires_at) values
+    ('expired', 1, now() - interval '1 second'), ('live', 1, now() + interval '1 hour')`);
+  await db.execute(sql`insert into visitor_salt (id, day, salt) values (1, '2000-01-01', 'expired')`);
+  const replica = await connectDb(env.DATABASE_URL);
+  try {
+    expect((await Promise.all([runRetention(db), runRetention(replica)])).toSorted()).toEqual([false, true]);
+  } finally {
+    await replica.$client.end();
+  }
+  expect(await db.execute(sql`select key from rate_limits where key in ('expired', 'live')`)).toEqual([{ key: "live" }]);
+  expect(await db.execute(sql`select * from visitor_salt`)).toHaveLength(0);
+  expect(await runRetention(db)).toBe(false);
 
   const left = await db
     .select({ id: clicks.id })
@@ -73,7 +81,7 @@ test("the Retention Period is at most 120 months", async () => {
   expect((await call(app, admin, "PATCH", "/api/settings", { retentionMonths: 120 })).body.retentionMonths).toBe(120);
 });
 
-test("worker replicas creating the same Click partitions at once all succeed", async () => {
+test("server replicas creating the same Click partitions at once all succeed", async () => {
   const month = [new Date(Date.UTC(2031, 0, 15))];
   await expect(Promise.all(Array.from({ length: 8 }, () => createPartitions(db, month)))).resolves.toHaveLength(8);
 });

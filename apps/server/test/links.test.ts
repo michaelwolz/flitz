@@ -1,4 +1,4 @@
-import { clicks, connectAndMigrate, eq } from "@flitzlink/db";
+import { clicks, connectDb, eq } from "@flitzlink/db";
 import { afterAll, expect, test } from "vitest";
 import { createApp } from "../src/app.ts";
 import { createPartitions } from "../src/clicks.ts";
@@ -6,7 +6,7 @@ import { call, testEnv, verifiedUser } from "./client.ts";
 
 const env = await testEnv();
 const { app, close } = await createApp(env);
-const db = await connectAndMigrate(env.DATABASE_URL);
+const db = await connectDb(env.DATABASE_URL);
 afterAll(() => Promise.all([close(), db.$client.end()]));
 
 async function createLink(headers: Record<string, string>, body: object) {

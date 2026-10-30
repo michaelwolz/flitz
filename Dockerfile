@@ -47,7 +47,7 @@ COPY --from=web /app/apps/web/dist apps/web/dist
 COPY apps/server/src apps/server/src
 COPY apps/server/docs apps/server/docs
 COPY packages/db/src packages/db/src
-COPY packages/db/drizzle packages/db/drizzle
+COPY packages/db/schema.sql packages/db/schema.sql
 COPY docs/brand/flitz-qr-centre.svg docs/brand/flitz-lockup-light.svg docs/brand/flitz-lockup-light.png docs/brand/
 COPY LICENSE NOTICE ./
 ENV NODE_ENV=production

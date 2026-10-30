@@ -1,9 +1,9 @@
 # Self-hosting
 
-flitz runs as one Docker image next to Postgres and Redis. The image starts in one of two roles:
+flitz runs as one Docker image next to Postgres. The image starts in one of two roles:
 
 - `server` (the default): answers HTTP on port 3000 with short URLs, QR codes, the web app, the API, MCP and these docs. Run as many replicas as you need.
-- `worker`: reads clicks from Redis and writes them to Postgres in batches, and once a night (in the first hour after midnight UTC) deletes clicks older than the retention period and web app sessions that expired more than 30 days ago. Clicks wait in Redis until a worker writes them, so run at least one: Redis keeps about the newest 100,000 waiting clicks and drops older ones.
+- `worker`: runs maintenance at startup and hourly. Once per UTC day it deletes clicks older than the retention period and web app sessions that expired more than 30 days ago. It also removes expired rate counters and yesterday's visitor salt. Run at least one worker; a Postgres transaction lock coordinates replicas and records successful daily cleanup, so failures can be retried.
 
 Give both roles the same environment.
 
@@ -15,7 +15,7 @@ From a checkout of the flitz repository:
 docker compose up
 ```
 
-This builds the image and starts the server, the worker, Postgres and Redis on http://localhost:3000. The web app is at http://localhost:3000/app and the docs at http://localhost:3000/docs.
+This builds the image and starts the server, the worker and Postgres on http://localhost:3000. The web app is at http://localhost:3000/app and the docs at http://localhost:3000/docs.
 
 Open the web app and sign up: on an empty instance, the first person to sign up and verify their email becomes admin. Without `SMTP_URL`, emails such as the verification link are written to the server log while `BASE_URL` is on `localhost` or another loopback address (`docker compose logs server`). See [Users and sign-up](#users-and-sign-up).
 
@@ -38,14 +38,13 @@ Keep the same `AUTH_SECRET` across restarts and for every process. docker compos
 
 ## Kubernetes with Helm
 
-The flitz Helm chart runs the server and the worker as two Deployments behind one Service. It does not include Postgres or Redis: run them yourself or use managed ones, and pass their URLs.
+The flitz Helm chart runs the server and the worker as two Deployments behind one Service. It does not include Postgres: run it yourself or use a managed database, and pass its URL.
 
 Put the settings that hold credentials in a Secret, under the names from the settings table:
 
 ```sh
 kubectl create secret generic flitz-secrets \
   --from-literal=DATABASE_URL=postgres://flitz:secret@postgres:5432/flitz \
-  --from-literal=REDIS_URL=redis://redis:6379 \
   --from-literal=AUTH_SECRET="$(openssl rand -base64 32)"
 ```
 
@@ -70,12 +69,12 @@ helm install flitz oci://ghcr.io/michaelwolz/charts/flitz -f values.yaml
 Each chart version runs the image of the same version, `ghcr.io/michaelwolz/flitz`; pin one with `--version`. Run `helm show values oci://ghcr.io/michaelwolz/charts/flitz` for every value. In short:
 
 - `baseUrl` sets `BASE_URL`. The chart doesn't render without it.
-- `existingSecret` names a Secret with any of `DATABASE_URL`, `REDIS_URL`, `AUTH_SECRET`, `SMTP_URL`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_SECRET` and `MICROSOFT_CLIENT_SECRET`. Instead, you can set them under `secrets`, and the chart stores them in a Secret of its own.
+- `existingSecret` names a Secret with any of `DATABASE_URL`, `AUTH_SECRET`, `SMTP_URL`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_SECRET` and `MICROSOFT_CLIENT_SECRET`. Instead, you can set them under `secrets`, and the chart stores them in a Secret of its own.
 - `config` takes the other settings, such as `ADMIN_EMAILS`, `SMTP_FROM` or `SIGNUP_DOMAINS`. Set `ADMIN_EMAILS` before the instance is reachable from the internet. Quote numbers and booleans.
 - `extraEnv` adds environment variables, such as `DATABASE_URL` read from a Secret key with another name.
 - `ingress` creates an Ingress, `httpRoute` a Gateway API HTTPRoute. Both route the host of `baseUrl` unless you list hosts in `ingress.hosts` or `httpRoute.hostnames`. Add your custom domains there.
 
-Scale the server and the worker independently with `server.replicas` and `worker.replicas`, and size them with `server.resources` and `worker.resources`. Add server replicas for more traffic. One worker is enough to start with; more workers share the clicks waiting in Redis.
+Scale the server and the worker independently with `server.replicas` and `worker.replicas`, and size them with `server.resources` and `worker.resources`. Add server replicas for more traffic. One worker is enough; additional workers coordinate through Postgres.
 
 The pods run as a non-root user with a read-only root filesystem. Kubernetes checks the server at `/healthz`. The reverse proxy notes below apply to your ingress controller or gateway.
 
@@ -85,7 +84,6 @@ The pods run as a non-root user with a read-only root filesystem. Kubernetes che
 | ------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BASE_URL`                                 | yes             | The public URL of the instance, such as `https://flitz.example.com`. Its hostname is the instance domain. Short URLs, emails, OAuth and these docs use it. Serve flitz at the root of this host. It must use `https`, except on `localhost` or another loopback address; the server does not start otherwise.                                            |
 | `DATABASE_URL`                             | yes             | Postgres connection URL, such as `postgres://flitz:secret@postgres:5432/flitz`.                                                                                                                                                                                                                                                                          |
-| `REDIS_URL`                                | yes             | Redis connection URL, such as `redis://redis:6379`.                                                                                                                                                                                                                                                                                                      |
 | `AUTH_SECRET`                              | yes             | A random secret of at least 32 characters that signs sessions, such as the output of `openssl rand -base64 32`. Unless `BASE_URL` is on `localhost` or another loopback address, flitz doesn't start with a shorter one or with the local-only default from `docker-compose.yml`.                                                                        |
 | `ADMIN_EMAILS`                             | no              | Comma-separated emails, such as `ada@example.com,grace@example.com`, that may always sign up and become admin; set it before the instance is reachable from the internet (see [Users and sign-up](#users-and-sign-up)).                                                                                                                                  |
 | `SIGNUP_DOMAINS`                           | no              | Comma-separated email domains, such as `example.com`, whose people may sign up without an invitation (see [Users and sign-up](#users-and-sign-up)).                                                                                                                                                                                                      |
@@ -136,15 +134,17 @@ docker compose exec postgres psql -U flitz -c "update users set email_verified =
 
 The last admin can be neither demoted nor removed. A user listed in `ADMIN_EMAILS` can only be made admin: they can be neither demoted nor removed, and taking an email off the list changes nobody's role. Removing a user deletes their account, ends their sessions and stops their API keys at once; removing an admin also deletes the invitations they sent. It doesn't keep them out: if their email domain is in `SIGNUP_DOMAINS`, they can sign up again, so the domain list decides who may join. An API key also stops working when its creator no longer has a role that allows all of its scopes.
 
-## Database migrations
+## Database initialization
 
-Every process applies pending migrations when it starts, so upgrades need no manual step. A lock in Postgres lets one process migrate at a time while the others wait, so you can start any number of them at once.
+On an empty database, startup installs the base schema from `packages/db/schema.sql` in one transaction. A Postgres advisory lock coordinates processes starting at the same time. Existing databases are left unchanged; there are no database migrations.
 
-## Backups and Redis persistence
+## Persistence and operational tradeoffs
 
-Postgres holds links, users, settings and written clicks; back it up.
+Postgres holds links, users, settings, clicks, daily visitor salts and shared rate counters; back it up. Each short-URL request writes its Click to Postgres before answering; there is no queue or click consumer. If that write fails, flitz logs the error and still redirects, so the Click is lost. Link and domain lookups read Postgres directly, so committed edits, deactivations and deletions take effect on the next request on every replica. A redirect takes about four database round trips (domain, link, rate counter, Click), and rate limits fail closed, so redirects need a healthy, writable database.
 
-Besides caches and rate-limit counters, Redis holds the clicks that no worker has written yet and the day's salt for visitor hashes. Run it with persistence, such as an append-only file (`appendonly yes`), as `docker-compose.yml` does. Without it, a Redis restart loses the waiting clicks and counts that day's earlier visitors again as unique visitors.
+Visitor hashes use one random salt shared by every process for the UTC day. The first Click of the next day replaces it; hourly maintenance deletes an unused past-day salt. No raw visitor IP is stored in clicks or rate counters. Rate limits use atomic expiring counters keyed by an HMAC in an unlogged table: they survive process restarts but reset after a Postgres crash or failover, and fail closed if Postgres is unavailable. Keep the same `AUTH_SECRET` on all replicas.
+
+Salts are removed from the live table, but database backups, WAL and old row versions can retain them. Protect backups as sensitive data and apply a bounded backup retention policy; a logical backup can exclude `visitor_salt`, `rate_limits` and `maintenance_runs` data. Restoring without the salt starts a new visitor count for that day; restoring without counters resets rate limits.
 
 ## Reverse proxy, TLS and custom domains
 

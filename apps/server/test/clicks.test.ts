@@ -1,16 +1,13 @@
-import { asc, clicks, connectAndMigrate, domains, eq, isNull, links } from "@flitzlink/db";
-import { createClient } from "redis";
+import { asc, clicks, connectDb, domains, eq, isNull, links, sql } from "@flitzlink/db";
 import { afterAll, expect, test, vi } from "vitest";
 import { createApp } from "../src/app.ts";
-import { processPendingClicks } from "../src/clicks.ts";
 import { testEnv } from "./client.ts";
 
 const env = await testEnv();
 const ip = "203.0.113.7";
 const { app, close } = await createApp(env, { lookupLocation: (address) => (address === ip ? { country: "DE", region: "BY" } : {}) });
-const db = await connectAndMigrate(env.DATABASE_URL);
-const redis = await createClient({ url: env.REDIS_URL }).connect();
-afterAll(() => Promise.all([close(), db.$client.end(), redis.close()]));
+const db = await connectDb(env.DATABASE_URL);
+afterAll(() => Promise.all([close(), db.$client.end()]));
 
 const iPhone =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
@@ -26,25 +23,18 @@ async function click(url: string, headers: Record<string, string> = {}) {
   return response.status;
 }
 
-function processedClicks(linkId: string, count: number) {
-  return vi.waitFor(async () => {
-    await processPendingClicks(db, redis, "test-worker");
-    const rows = await db.select().from(clicks).where(eq(clicks.linkId, linkId)).orderBy(asc(clicks.clickedAt), asc(clicks.id));
-    expect(rows).toHaveLength(count);
-    return rows;
-  });
+async function storedClicks(linkId: string, count: number) {
+  const rows = await db.select().from(clicks).where(eq(clicks.linkId, linkId)).orderBy(asc(clicks.clickedAt), asc(clicks.id));
+  expect(rows).toHaveLength(count);
+  return rows;
 }
-
-const waitingClicks = async () => JSON.stringify(await redis.xRange("clicks", "-", "+"));
 
 test("a redirect records a Click with its facts and Visitor Hash but never the IP", async () => {
   const link = await createLink("click-fields");
   const status = await click("/Click-Fields?utm_source=flyer&lang=de", { referer: "https://news.example.org/a?id=1" });
   expect(status).toBe(302);
-  await vi.waitFor(async () => expect(await waitingClicks()).toContain("click-fields"));
-  expect(await waitingClicks()).not.toContain(ip);
 
-  const [row] = await processedClicks(link.id, 1);
+  const [row] = await storedClicks(link.id, 1);
   expect(row).toMatchObject({
     linkId: link.id,
     domainId: null,
@@ -74,56 +64,56 @@ test("link previews and email scanners are recorded as Bot Clicks", async () => 
   ]) {
     await click("/click-bots", { "user-agent": userAgent });
   }
-  expect((await processedClicks(link.id, 5)).map((row) => row.bot)).toEqual([true, true, true, true, true]);
+  expect((await storedClicks(link.id, 5)).map((row) => row.bot)).toEqual([true, true, true, true, true]);
 });
 
-test("the same visitor gets the same Visitor Hash until the daily salt rotates at the end of the UTC day", async () => {
+test("Visitor Hashes agree across replicas and restarts, rotate daily, and never store the IP", async () => {
   const link = await createLink("click-visitors");
-  const now = new Date();
-  await click("/click-visitors?n=first");
-  await click("/click-visitors?n=again");
+  const replica = await createApp(env);
+  const visit = (other: typeof app, n: string) =>
+    other.request(`/click-visitors?n=${n}`, {
+      headers: { "x-forwarded-for": ip, "user-agent": iPhone },
+    });
+  try {
+    await Promise.all([visit(app, "first"), visit(replica.app, "replica")]);
+  } finally {
+    await replica.close();
+  }
+  const restarted = await createApp(env);
+  try {
+    await visit(restarted.app, "restart");
+  } finally {
+    await restarted.close();
+  }
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date("2040-01-01T00:00:00Z") });
+  try {
+    await click("/click-visitors?n=skew");
+  } finally {
+    vi.useRealTimers();
+  }
   await click("/click-visitors?n=other", { "x-forwarded-for": "198.51.100.1" });
-  const endOfDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-  await vi.waitFor(async () => expect(await redis.expireTime(`visitor-salt:${now.toISOString().slice(0, 10)}`)).toBe(endOfDay / 1000));
-  vi.useFakeTimers({ toFake: ["Date"], now: endOfDay });
-  await click("/click-visitors?n=tomorrow").finally(() => vi.useRealTimers());
-
-  const hash = Object.fromEntries((await processedClicks(link.id, 4)).map((row) => [row.query.n, row.visitorHash]));
-  expect(hash.again).toBe(hash.first);
+  const [{ salt: oldSalt }] = await db.execute<{ salt: string }>(sql`select salt from visitor_salt`);
+  await db.execute(sql`update visitor_salt set day = '2000-01-01'`);
+  await click("/click-visitors?n=tomorrow");
+  const hash = Object.fromEntries((await storedClicks(link.id, 6)).map((row) => [row.query.n, row.visitorHash]));
+  expect(hash.replica).toBe(hash.first);
+  expect(hash.restart).toBe(hash.first);
+  expect(hash.skew).toBe(hash.first);
+  const skew = (await storedClicks(link.id, 6)).find((row) => row.query.n === "skew")!;
+  expect(Math.abs(Date.now() - skew.clickedAt.getTime())).toBeLessThan(60_000);
   expect(hash.other).not.toBe(hash.first);
   expect(hash.tomorrow).not.toBe(hash.first);
-});
+  const salts = await db.execute(sql`select * from visitor_salt`);
+  expect(salts).toHaveLength(1);
+  expect(JSON.stringify(salts)).not.toContain(oldSalt);
+  expect(JSON.stringify(salts)).not.toContain(ip);
+}, 20_000);
 
-test("Clicks a crashed worker read but never inserted are claimed and inserted by another worker", async () => {
-  const link = await createLink("click-crash");
-  await click("/click-crash");
-  await vi.waitFor(async () => expect(await waitingClicks()).toContain("click-crash"));
-  const unreachableDb = await connectAndMigrate(env.DATABASE_URL);
-  await unreachableDb.$client.end();
-  await expect(processPendingClicks(unreachableDb, redis, "crashed-worker")).rejects.toThrow(/CONNECTION_ENDED/);
-  expect(await processedClicks(link.id, 0)).toEqual([]);
-
-  await processPendingClicks(db, redis, "test-worker", 0);
-  expect(await processedClicks(link.id, 1)).toHaveLength(1);
-});
-
-test("a Click Postgres rejects is dropped without holding up the Clicks behind it", async () => {
+test("control characters are removed before direct Click persistence", async () => {
   const link = await createLink("click-poison");
-  const fromBeforeTheFix = {
-    slug: "click-poison",
-    linkId: link.id,
-    deviceType: "desktop",
-    query: { x: "\0" },
-    bot: false,
-    visitorHash: "v",
-  };
-  await redis.xAdd("clicks", "*", { click: JSON.stringify(fromBeforeTheFix) });
-  await click("/click-poison?x=a%00b");
-  await click("/click-poison?after=1");
-
-  expect((await processedClicks(link.id, 2)).map((row) => row.query)).toEqual(expect.arrayContaining([{ x: "ab" }, { after: "1" }]));
-  expect(JSON.stringify(await redis.xRange("clicks", "-", "+"))).not.toContain("click-poison");
-  expect((await redis.xPending("clicks", "click-worker")).pending).toBe(0);
+  expect(await click("/click-poison?x=a%00b")).toBe(302);
+  expect(await click("/click-poison?after=1")).toBe(302);
+  expect((await storedClicks(link.id, 2)).map((row) => row.query)).toEqual(expect.arrayContaining([{ x: "ab" }, { after: "1" }]));
 });
 
 test("a Click keeps at most 20 query parameters of 256 characters each, and 2 KB of them in all", async () => {
@@ -133,7 +123,7 @@ test("a Click keeps at most 20 query parameters of 256 characters each, and 2 KB
   await click(`/click-query-cap?${params("v".repeat(300))}`);
 
   const kept = (count: number, value: string) => Object.fromEntries(Array.from({ length: count }, (_, i) => [`p${i}`, value]));
-  expect((await processedClicks(link.id, 2)).map((row) => row.query)).toEqual(
+  expect((await storedClicks(link.id, 2)).map((row) => row.query)).toEqual(
     expect.arrayContaining([kept(20, "1"), kept(7, "v".repeat(256))]),
   );
 });
@@ -148,18 +138,25 @@ test("unknown and deactivated Slugs record Orphan Clicks with their Domain and S
   await createLink("click-stray");
   expect(await click("http://unknown.click-pipeline.example/click-stray")).toBe(404);
 
-  const orphans = await vi.waitFor(async () => {
-    await processPendingClicks(db, redis, "test-worker");
-    const orphans = await db.select({ domainId: clicks.domainId, slug: clicks.slug }).from(clicks).where(isNull(clicks.linkId));
-    expect(orphans).toEqual(
-      expect.arrayContaining([
-        { domainId: null, slug: "click-gone" },
-        { domainId: null, slug: "click-unknown" },
-        { domainId: domain.id, slug: "click-typo" },
-      ]),
-    );
-    return orphans;
-  });
+  const orphans = await db.select({ domainId: clicks.domainId, slug: clicks.slug }).from(clicks).where(isNull(clicks.linkId));
+  expect(orphans).toEqual(
+    expect.arrayContaining([
+      { domainId: null, slug: "click-gone" },
+      { domainId: null, slug: "click-unknown" },
+      { domainId: domain.id, slug: "click-typo" },
+    ]),
+  );
   expect(orphans.map((orphan) => orphan.slug)).not.toContain("favicon.ico");
   expect(await db.select().from(clicks).where(eq(clicks.slug, "click-stray"))).toEqual([]);
+});
+
+test("a failed Click insert still redirects", async () => {
+  const link = await createLink("click-write-failure");
+  await db.execute(sql`alter table clicks add constraint test_click_write check (slug <> 'click-write-failure')`);
+  try {
+    expect(await click("/click-write-failure")).toBe(302);
+    expect(await storedClicks(link.id, 0)).toEqual([]);
+  } finally {
+    await db.execute(sql`alter table clicks drop constraint test_click_write`);
+  }
 });
